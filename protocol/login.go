@@ -92,16 +92,10 @@ func ParseLoginPacket(data []byte) (*LoginPacket, error) {
 		return nil, fmt.Errorf("failed to decrypt rsa block: %w", err)
 	}
 
-	// --- 3. Parse the Decrypted Block ---
-	decryptedReader := bytes.NewReader(decryptedBlock)
+	messagePayload := bytes.TrimLeft(decryptedBlock, "\x00")
 
-	//readByte, err := decryptedReader.ReadByte()
-	//if err != nil {
-	//	return nil, err
-	//}
-	//if readByte != 0x00 {
-	//	return nil, fmt.Errorf("invalid check byte: expected 0x00, got 0x%02X", readByte)
-	//}
+	// Now, create a reader from the clean, left-aligned payload.
+	decryptedReader := bytes.NewReader(messagePayload)
 
 	if err := binary.Read(decryptedReader, binary.LittleEndian, &packet.XTEAKey); err != nil {
 		return nil, fmt.Errorf("failed to read xtea key from decrypted block: %w", err)

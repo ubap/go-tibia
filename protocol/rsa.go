@@ -2,7 +2,6 @@ package protocol
 
 import (
 	"crypto/rsa"
-	"errors"
 	"fmt"
 	"math/big"
 	"strconv"
@@ -86,41 +85,35 @@ func BuildPrivateKeyFromComponents(nStr, dStr string) (*rsa.PrivateKey, error) {
 }
 
 func DecryptRSA(ciphertext []byte) ([]byte, error) {
-	// 1. Convert the ciphertext byte slice into a big integer.
 	c := new(big.Int).SetBytes(ciphertext)
-
-	// 2. Perform the modular exponentiation: m = c^D mod N
 	m := new(big.Int).Exp(c, keyForClientCommunication.D, keyForClientCommunication.N)
 
-	// 3. Convert the resulting plaintext integer back into a byte slice.
-	plaintext := m.Bytes()
+	// This is the correct implementation.
+	keySize := keyForClientCommunication.Size()
+	plaintext := make([]byte, keySize)
+	m.FillBytes(plaintext)
 
 	return plaintext, nil
 }
 
 func EncryptRSA(pubKey *rsa.PublicKey, plaintext []byte) ([]byte, error) {
-	// 1. Convert the plaintext byte slice into a big integer.
-	m := new(big.Int).SetBytes(plaintext)
+	keySize := pubKey.Size()
 
-	// 2. Check if the message is too long. The message integer m must be less than the modulus N.
-	if m.Cmp(pubKey.N) >= 0 {
-		return nil, errors.New("message too long for RSA key size")
-	}
+	// 1. Create a new buffer of the exact key size.
+	paddedPlaintext := make([]byte, keySize)
 
-	// 3. Perform the modular exponentiation: c = m^E mod N
-	// This is the core of RSA encryption.
+	// 2. Copy the plaintext to the BEGINNING of the buffer.
+	// This creates the required left-aligned, right-padded message.
+	copy(paddedPlaintext, plaintext)
+
+	// 3. Encrypt this full, padded block.
+	m := new(big.Int).SetBytes(paddedPlaintext)
 	e := big.NewInt(int64(pubKey.E))
 	c := new(big.Int).Exp(m, e, pubKey.N)
 
-	// 4. Convert the resulting ciphertext integer back into a byte slice.
-	// The ciphertext must be padded with leading zeros to match the key size.
-	keySize := pubKey.Size() // e.g., 128 for a 1024-bit key
+	// 4. Return the ciphertext, ensuring it's also the full key size.
 	ciphertext := make([]byte, keySize)
-	cBytes := c.Bytes()
-
-	// Copy the ciphertext bytes to the end of the buffer to pad with leading zeros.
-	offset := keySize - len(cBytes)
-	copy(ciphertext[offset:], cBytes)
+	c.FillBytes(ciphertext)
 
 	return ciphertext, nil
 }

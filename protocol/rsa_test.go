@@ -3,57 +3,92 @@ package protocol
 import (
 	"bytes"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func Test_EncryptAndDecrypt(t *testing.T) {
+	// 1. Arrange
 	inputData := []byte("Lorem Ipsum is simply dummy text of the printing and typesetting industry.")
 
+	// 2. Act
 	encryptedData, err := EncryptRSA(&keyForClientCommunication.PublicKey, inputData)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err, "Encryption should not fail")
+
 	decryptedData, err := DecryptRSA(encryptedData)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if string(decryptedData) != string(inputData) {
-		t.Fatalf("Decrypted data does not match original. Got '%s', expected '%s'", string(decryptedData), string(inputData))
-	}
+	require.NoError(t, err, "Decryption should not fail")
+
+	// 3. Assert
+	// The decrypted data is a full block. We must verify that our original
+	// input data is at the BEGINNING of this block.
+
+	// require.True is a clear and readable way to assert this.
+	require.True(t, bytes.HasPrefix(decryptedData, inputData), "Decrypted block should start with the original plaintext")
+
+	// Optional: You can also log the data to see it visually.
+	t.Log("Successfully verified that the decrypted block is left-aligned.")
 }
 
-func TestDecryptRSA_LeadingZero(t *testing.T) {
-	// Arrange: Create a plaintext that is guaranteed to start with a zero byte.
-	// This mimics our real protocol's check byte.
+func TestEncryptDecrypt_RoundTrip_WithLeadingZero(t *testing.T) {
+	// 1. Arrange: Create a plaintext that is guaranteed to start with a zero byte.
 	originalPlaintext := []byte{0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77}
 
-	t.Logf("Original plaintext (len=%d): %x", len(originalPlaintext), originalPlaintext)
-
-	// Act: Encrypt the data. We assume EncryptRSA is correct.
+	// 2. Act: Encrypt and then decrypt the data.
 	ciphertext, err := EncryptRSA(&keyForClientCommunication.PublicKey, originalPlaintext)
-	if err != nil {
-		t.Fatalf("Encryption failed unexpectedly: %v", err)
-	}
+	require.NoError(t, err, "Encryption should not fail")
 
-	// Decrypt the data using the function we are testing.
 	decryptedBlock, err := DecryptRSA(ciphertext)
-	if err != nil {
-		t.Fatalf("Decryption failed unexpectedly: %v", err)
-	}
+	require.NoError(t, err, "Decryption should not fail")
 
-	t.Logf("Decrypted block (len=%d):   %x", len(decryptedBlock), decryptedBlock)
+	// 3. Assert (Improved)
 
-	// Assert: Check if the decrypted block has the expected length.
-	// The key size is the expected length for raw RSA plaintext.
-	expectedLength := keyForClientCommunication.Size()
-	if len(decryptedBlock) != expectedLength {
-		// This assertion will fail if DecryptRSA uses m.Bytes()
-		t.Errorf("Decrypted block has incorrect length. Got %d, want %d", len(decryptedBlock), expectedLength)
-		t.Log("This failure indicates the decryption function is likely stripping leading zero bytes.")
-	}
+	// 3a. Construct the exact byte block we expect to receive after decryption.
+	// It should be a block of the full key size, with our originalPlaintext
+	// at the beginning, and the rest filled with zeros.
+	keySize := keyForClientCommunication.Size()
+	expectedBlock := make([]byte, keySize) // Creates a slice of all zeros
+	copy(expectedBlock, originalPlaintext) // Copies our data to the start
 
-	// As a secondary check, verify the content.
-	// We need to compare the end of the decrypted block with our original plaintext.
-	if !bytes.HasSuffix(decryptedBlock, originalPlaintext) {
-		t.Errorf("Decrypted block does not contain the original plaintext at the end.")
-	}
+	// 3b. Perform a single, powerful assertion to compare the entire block.
+	// This verifies the prefix (our plaintext) and the suffix (the zero-padding).
+	require.Equal(t, expectedBlock, decryptedBlock, "Decrypted block should match the original data with correct right-padding")
+
+	t.Log("Successfully verified that a message with a leading zero is correctly left-aligned and padded.")
+}
+
+// TestEncryptRSA_IsLeftAligned confirms that our EncryptRSA function correctly
+// creates a left-aligned, right-padded block, mimicking the behavior of the C++ client.
+func TestEncryptRSA_IsLeftAligned(t *testing.T) {
+	// 1. Arrange: Define a short plaintext message.
+	// A short message is crucial because a long one might fill the entire block,
+	// hiding the padding behavior.
+	originalPlaintext := []byte{0x00, 0xAA, 0xBB, 0xCC, 0xDD}
+
+	// 2. Act: Encrypt the message using the function we want to test.
+	ciphertext, err := EncryptRSA(&keyForClientCommunication.PublicKey, originalPlaintext)
+	require.NoError(t, err, "EncryptRSA should not produce an error")
+
+	// Decrypt it using our definitive, Java-like DecryptRSA to check the result.
+	decryptedBlock, err := DecryptRSA(ciphertext)
+	require.NoError(t, err, "DecryptRSA should not produce an error")
+
+	// 3. Assert: Verify the structure of the decrypted block.
+
+	// Assertion 3a: The decrypted block should have the full key size.
+	keySize := keyForClientCommunication.Size()
+	require.Equal(t, keySize, len(decryptedBlock), "Decrypted block must have the full key size")
+
+	// Assertion 3b: The original plaintext must be at the BEGINNING of the block.
+	// This is the core test for left-alignment.
+	require.True(t, bytes.HasPrefix(decryptedBlock, originalPlaintext), "Decrypted block should start with the original plaintext")
+
+	// Assertion 3c: The bytes immediately following the plaintext should be zeros.
+	// This confirms that it was correctly right-padded.
+	paddingStart := len(originalPlaintext)
+	expectedPadding := make([]byte, keySize-paddingStart) // A slice of all zeros.
+
+	actualPadding := decryptedBlock[paddingStart:]
+	require.Equal(t, expectedPadding, actualPadding, "The remainder of the block should be zero-byte padding")
+
+	t.Log("Test passed: EncryptRSA correctly produces a left-aligned, right-padded block.")
 }
