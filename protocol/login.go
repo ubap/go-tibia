@@ -14,7 +14,6 @@ type LoginPacket struct {
 	DatSignature  uint32
 	SprSignature  uint32
 	PicSignature  uint32
-
 	// RSA Encrypted part starts here
 	XTEAKey       [4]uint32
 	AccountNumber uint32
