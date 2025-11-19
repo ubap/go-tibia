@@ -2,6 +2,7 @@ package protocol
 
 import (
 	"bytes"
+	"crypto/rsa"
 	"encoding/binary"
 	"fmt"
 	"io"
@@ -20,27 +21,36 @@ type LoginPacket struct {
 	Password      string
 }
 
-func (p *LoginPacket) Write(w io.Writer) error {
-	if err := binary.Write(w, binary.LittleEndian, p.ClientOS); err != nil {
-		return err
+func (lp *LoginPacket) Marshal(pubKey *rsa.PublicKey) ([]byte, error) {
+	// 1. Prepare the plaintext block that needs to be encrypted.
+	rsaPlaintext := new(bytes.Buffer)
+
+	// Write the check byte, XTEA key, account number, and password.
+	rsaPlaintext.WriteByte(0x00)
+	binary.Write(rsaPlaintext, binary.LittleEndian, lp.XTEAKey)
+	binary.Write(rsaPlaintext, binary.LittleEndian, lp.AccountNumber)
+
+	// Write the length-prefixed password string.
+	binary.Write(rsaPlaintext, binary.LittleEndian, uint16(len(lp.Password)))
+	rsaPlaintext.WriteString(lp.Password)
+
+	// 2. Encrypt the plaintext block with the target server's public key.
+	encryptedBlock, err := EncryptRSA(pubKey, rsaPlaintext.Bytes())
+	if err != nil {
+		return nil, err
 	}
-	if err := binary.Write(w, binary.LittleEndian, p.ClientVersion); err != nil {
-		return err
-	}
-	if err := binary.Write(w, binary.LittleEndian, p.AccountNumber); err != nil {
-		return err
-	}
-	// For strings, first write the length (as uint16), then the string itself.
-	if err := binary.Write(w, binary.LittleEndian, uint16(len(p.Password))); err != nil {
-		return err
-	}
-	if _, err := w.Write([]byte(p.Password)); err != nil {
-		return err
-	}
-	if err := binary.Write(w, binary.LittleEndian, p.XTEAKey); err != nil {
-		return err
-	}
-	return nil
+
+	// 3. Assemble the full packet by prepending the unencrypted header.
+	fullPacket := new(bytes.Buffer)
+	binary.Write(fullPacket, binary.LittleEndian, lp.Protocol)
+	binary.Write(fullPacket, binary.LittleEndian, lp.ClientOS)
+	binary.Write(fullPacket, binary.LittleEndian, lp.ClientVersion)
+	binary.Write(fullPacket, binary.LittleEndian, lp.DatSignature)
+	binary.Write(fullPacket, binary.LittleEndian, lp.SprSignature)
+	binary.Write(fullPacket, binary.LittleEndian, lp.PicSignature)
+	fullPacket.Write(encryptedBlock)
+
+	return fullPacket.Bytes(), nil
 }
 
 func ParseLoginPacket(data []byte) (*LoginPacket, error) {
@@ -84,6 +94,14 @@ func ParseLoginPacket(data []byte) (*LoginPacket, error) {
 
 	// --- 3. Parse the Decrypted Block ---
 	decryptedReader := bytes.NewReader(decryptedBlock)
+
+	//readByte, err := decryptedReader.ReadByte()
+	//if err != nil {
+	//	return nil, err
+	//}
+	//if readByte != 0x00 {
+	//	return nil, fmt.Errorf("invalid check byte: expected 0x00, got 0x%02X", readByte)
+	//}
 
 	if err := binary.Read(decryptedReader, binary.LittleEndian, &packet.XTEAKey); err != nil {
 		return nil, fmt.Errorf("failed to read xtea key from decrypted block: %w", err)

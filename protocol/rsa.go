@@ -15,7 +15,7 @@ const (
 )
 
 var keyForClientCommunication *rsa.PrivateKey
-var keyForGameServerCommunication *rsa.PublicKey
+var KeyForGameServerCommunication *rsa.PublicKey
 
 func init() {
 	privateKey, err := BuildPrivateKeyFromComponents(OTPublicRSA, OTPrivateRSA)
@@ -28,7 +28,7 @@ func init() {
 	if err != nil {
 		panic(fmt.Sprintf("FATAL: Could not build RSA public key: %v", err))
 	}
-	keyForGameServerCommunication = publicKey
+	KeyForGameServerCommunication = publicKey
 }
 
 // ParseTibiaRSAPublicKey takes a modulus (as a decimal string) and an exponent
@@ -90,7 +90,6 @@ func DecryptRSA(ciphertext []byte) ([]byte, error) {
 	c := new(big.Int).SetBytes(ciphertext)
 
 	// 2. Perform the modular exponentiation: m = c^D mod N
-	// This is the core of RSA decryption.
 	m := new(big.Int).Exp(c, keyForClientCommunication.D, keyForClientCommunication.N)
 
 	// 3. Convert the resulting plaintext integer back into a byte slice.
@@ -99,23 +98,23 @@ func DecryptRSA(ciphertext []byte) ([]byte, error) {
 	return plaintext, nil
 }
 
-func EncryptRSA(plaintext []byte) ([]byte, error) {
+func EncryptRSA(pubKey *rsa.PublicKey, plaintext []byte) ([]byte, error) {
 	// 1. Convert the plaintext byte slice into a big integer.
 	m := new(big.Int).SetBytes(plaintext)
 
 	// 2. Check if the message is too long. The message integer m must be less than the modulus N.
-	if m.Cmp(keyForClientCommunication.N) >= 0 {
+	if m.Cmp(pubKey.N) >= 0 {
 		return nil, errors.New("message too long for RSA key size")
 	}
 
 	// 3. Perform the modular exponentiation: c = m^E mod N
 	// This is the core of RSA encryption.
-	e := big.NewInt(int64(keyForClientCommunication.E))
-	c := new(big.Int).Exp(m, e, keyForClientCommunication.N)
+	e := big.NewInt(int64(pubKey.E))
+	c := new(big.Int).Exp(m, e, pubKey.N)
 
 	// 4. Convert the resulting ciphertext integer back into a byte slice.
 	// The ciphertext must be padded with leading zeros to match the key size.
-	keySize := keyForClientCommunication.Size() // e.g., 128 for a 1024-bit key
+	keySize := pubKey.Size() // e.g., 128 for a 1024-bit key
 	ciphertext := make([]byte, keySize)
 	cBytes := c.Bytes()
 

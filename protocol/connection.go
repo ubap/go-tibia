@@ -36,6 +36,19 @@ func (c *Connection) ReadMessage() ([]byte, error) {
 	return payload, nil
 }
 
+func (c *Connection) WriteMessage(payload []byte) error {
+	length := uint16(len(payload))
+
+	// Write the 2-byte length prefix.
+	if err := binary.Write(c.conn, binary.LittleEndian, length); err != nil {
+		return err
+	}
+
+	// Write the actual message payload.
+	_, err := c.conn.Write(payload)
+	return err
+}
+
 // Close simply closes the underlying network connection.
 func (c *Connection) Close() error {
 	return c.conn.Close()
