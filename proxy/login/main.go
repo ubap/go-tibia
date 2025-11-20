@@ -10,7 +10,6 @@ import (
 	"sync"
 )
 
-// The address and port for our dummy server to listen on.
 const (
 	listenAddr     = ":7171"
 	realServerAddr = "world.fibula.app:7171"
