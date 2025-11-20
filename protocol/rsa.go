@@ -14,7 +14,7 @@ const (
 )
 
 var keyForClientCommunication *rsa.PrivateKey
-var KeyForGameServerCommunication *rsa.PublicKey
+var keyForGameServerCommunication *rsa.PublicKey
 
 func init() {
 	privateKey, err := BuildPrivateKeyFromComponents(OTPublicRSA, OTPrivateRSA)
@@ -27,7 +27,7 @@ func init() {
 	if err != nil {
 		panic(fmt.Sprintf("FATAL: Could not build RSA public key: %v", err))
 	}
-	KeyForGameServerCommunication = publicKey
+	keyForGameServerCommunication = publicKey
 }
 
 // ParseTibiaRSAPublicKey takes a modulus (as a decimal string) and an exponent

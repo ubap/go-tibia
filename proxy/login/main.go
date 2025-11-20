@@ -73,7 +73,7 @@ func handleConnection(clientConn net.Conn) {
 	log.Printf("Successfully connected to real server %s", realServerAddr)
 
 	// 5. Re-serialize the packet, but this time encrypt it with the TARGET server's public key.
-	outgoingMessageBytes, err := packet.Marshal(protocol.KeyForGameServerCommunication)
+	outgoingMessageBytes, err := packet.Marshal()
 	if err != nil {
 		log.Printf("Failed to marshal outgoing packet: %v", err)
 		return

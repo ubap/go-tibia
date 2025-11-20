@@ -35,7 +35,7 @@ func main() {
 
 	err = os.WriteFile("Tibia_patched.exe", content, 0755)
 	if err != nil {
-		log.Fatalf("Error writing output file '%s': %v", inputFile, err)
+		log.Fatalf("Error writing output file '%s': %v", *inputFile, err)
 	}
 
 	log.Println("Successfully wrote output to Tibia_patched.exe")

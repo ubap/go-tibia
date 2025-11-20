@@ -1,8 +1,14 @@
 package protocol
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/stretchr/testify/require"
+)
 
 func Test(t *testing.T) {
+	// setup the key for encryption, we want to use the client communication keypair
+	keyForGameServerCommunication = &keyForClientCommunication.PublicKey
 
 	packet := LoginPacket{
 		Protocol:      1,
@@ -16,17 +22,15 @@ func Test(t *testing.T) {
 		Password:      "secret",
 	}
 
-	marshal, err := packet.Marshal(&keyForClientCommunication.PublicKey)
+	marshal, err := packet.Marshal()
 	if err != nil {
-		t.Fatalf("Error marshalling public key: %v", err)
+		t.Fatalf("Error marshalling login packet: %v", err)
 	}
 
 	loginPacket, err := ParseLoginPacket(marshal)
 	if err != nil {
-		t.Fatalf("Error parsing public key: %v", err)
+		t.Fatalf("Error parsing login packet: %v", err)
 	}
 
-	if *loginPacket != packet {
-		t.Fatalf("Decrypted data does not match original. Got '%v', expected '%v'", loginPacket, packet)
-	}
+	require.Equal(t, packet, *loginPacket, "Parsed packet does not match original")
 }

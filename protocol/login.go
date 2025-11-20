@@ -2,7 +2,6 @@ package protocol
 
 import (
 	"bytes"
-	"crypto/rsa"
 	"encoding/binary"
 	"fmt"
 	"io"
@@ -21,7 +20,7 @@ type LoginPacket struct {
 	Password      string
 }
 
-func (lp *LoginPacket) Marshal(pubKey *rsa.PublicKey) ([]byte, error) {
+func (lp *LoginPacket) Marshal() ([]byte, error) {
 	// 1. Prepare the plaintext block that needs to be encrypted.
 	rsaPlaintext := new(bytes.Buffer)
 
@@ -35,7 +34,7 @@ func (lp *LoginPacket) Marshal(pubKey *rsa.PublicKey) ([]byte, error) {
 	rsaPlaintext.WriteString(lp.Password)
 
 	// 2. Encrypt the plaintext block with the target server's public key.
-	encryptedBlock, err := EncryptRSA(pubKey, rsaPlaintext.Bytes())
+	encryptedBlock, err := EncryptRSA(keyForGameServerCommunication, rsaPlaintext.Bytes())
 	if err != nil {
 		return nil, err
 	}
