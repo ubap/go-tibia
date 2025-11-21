@@ -11,7 +11,7 @@ func Test(t *testing.T) {
 	// We want to use the known test RSA keys so we can decrypt the packet
 	crypto.RSA.GameServerPublicKey = &crypto.RSA.ClientPrivateKey.PublicKey
 
-	packet := LoginPacket{
+	packet := ClientCredentialPacket{
 		Protocol:      1,
 		ClientOS:      65535,
 		ClientVersion: 1234,
@@ -52,7 +52,7 @@ func TestParseLoginPacket_GoldenSample(t *testing.T) {
 	packet, err := ParseCredentialsPacket(capturedPacket)
 	require.NoError(t, err, "Failed to parse login packet")
 
-	expected := LoginPacket{
+	expected := ClientCredentialPacket{
 		Protocol:      1,
 		ClientOS:      2,
 		ClientVersion: 772,

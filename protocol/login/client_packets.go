@@ -9,7 +9,8 @@ import (
 	"io"
 )
 
-type LoginPacket struct {
+// Special packet - first received from the client during login.
+type ClientCredentialPacket struct {
 	Protocol      uint8
 	ClientOS      uint16
 	ClientVersion uint16
@@ -22,7 +23,7 @@ type LoginPacket struct {
 	Password      string
 }
 
-func (lp *LoginPacket) Marshal() ([]byte, error) {
+func (lp *ClientCredentialPacket) Marshal() ([]byte, error) {
 	// 1. Prepare the plaintext block that needs to be encrypted.
 	rsaPlaintext := new(bytes.Buffer)
 
@@ -54,11 +55,11 @@ func (lp *LoginPacket) Marshal() ([]byte, error) {
 	return fullPacket.Bytes(), nil
 }
 
-func ParseCredentialsPacket(data []byte) (*LoginPacket, error) {
+func ParseCredentialsPacket(data []byte) (*ClientCredentialPacket, error) {
 	// Use a bytes.Reader to treat the byte slice like a file or network stream.
 	// This makes it easy to read structured data sequentially.
 	reader := bytes.NewReader(data)
-	packet := &LoginPacket{}
+	packet := &ClientCredentialPacket{}
 
 	// --- 1. Read the Unencrypted Header ---
 	// We read each field in order, using binary.Read for fixed-size data.
