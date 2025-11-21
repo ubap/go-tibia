@@ -58,3 +58,7 @@ func (c *Connection) Close() error {
 func (c *Connection) RemoteAddr() net.Addr {
 	return c.conn.RemoteAddr()
 }
+
+func (c *Connection) RawConn() net.Conn {
+	return c.conn
+}

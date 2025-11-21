@@ -1,9 +1,10 @@
-package protocol
+package login
 
 import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"goTibia/protocol"
 	"goTibia/protocol/crypto"
 	"io"
 )
@@ -101,7 +102,7 @@ func ParseLoginPacket(data []byte) (*LoginPacket, error) {
 		return nil, fmt.Errorf("failed to read account number from decrypted block: %w", err)
 	}
 
-	password, err := readString(decryptedReader)
+	password, err := protocol.ReadString(decryptedReader)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse password: %w", err)
 	}

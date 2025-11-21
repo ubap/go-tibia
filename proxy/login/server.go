@@ -1,23 +1,21 @@
 package login
 
 import (
+	"fmt"
 	"goTibia/protocol"
+	"goTibia/protocol/login"
 	"goTibia/proxy"
 	"io"
 	"log"
 	"net"
-	"sync"
 )
 
-// Server is a struct that manages the login proxy.
-// It holds the configuration needed for the login process.
 type Server struct {
 	ListenAddr     string
 	RealServerAddr string
 	// You could add other dependencies here, like a specific logger.
 }
 
-// NewServer is a constructor for the login server.
 func NewServer(listenAddr, realServerAddr string) *Server {
 	return &Server{
 		ListenAddr:     listenAddr,
@@ -39,85 +37,98 @@ func (s *Server) Start() error {
 			log.Printf("Login proxy failed to accept connection: %v", err)
 			continue
 		}
-		go s.handleConnection(conn) // Call the method on our server instance
+		go s.handleConnection(conn)
 	}
 }
 
-func (p *Server) handleConnection(clientConn net.Conn) {
+func (s *Server) handleConnection(clientConn net.Conn) {
 	protoClientConn := protocol.NewConnection(clientConn)
 	defer protoClientConn.Close()
+	log.Printf("Login: Accepted connection from %s", protoClientConn.RemoteAddr())
 
-	log.Printf("Accepted connection from %s", protoClientConn.RemoteAddr())
+	// Phase 1: Receive and Decode
+	loginPacket, err := s.receiveLoginPacket(protoClientConn)
+	if err != nil {
+		log.Printf("Login: Failed to process login packet from %s: %v", protoClientConn.RemoteAddr(), err)
+		return
+	}
 
-	messageBytes, err := protoClientConn.ReadMessage()
+	// Phase 2: Forward and Re-encode
+	protoServerConn, err := s.forwardLoginPacket(loginPacket)
+	if err != nil {
+		log.Printf("Login: Failed to forward login packet for %s: %v", protoClientConn.RemoteAddr(), err)
+		return
+	}
+	defer protoServerConn.Close()
+
+	// Phase 3: Bridge the connection
+	s.bridgeConnections(protoClientConn, protoServerConn)
+
+	log.Printf("Login: Connection for %s finished.", protoClientConn.RemoteAddr())
+}
+
+func (s *Server) receiveLoginPacket(client *protocol.Connection) (*login.LoginPacket, error) {
+	messageBytes, err := client.ReadMessage()
 	if err != nil {
 		if err == io.EOF {
-			log.Printf("Client %s disconnected.", protoClientConn.RemoteAddr())
-		} else {
-			log.Printf("Error reading message from %s: %v", protoClientConn.RemoteAddr(), err)
+			return nil, fmt.Errorf("client disconnected before sending login packet")
 		}
-		return // End the handler for this connection.
+		return nil, fmt.Errorf("error reading message: %w", err)
 	}
 
-	packet, err := protocol.ParseLoginPacket(messageBytes)
+	packet, err := login.ParseLoginPacket(messageBytes)
 	if err != nil {
-		log.Printf("Error parsing login packet: %v", err)
-		return
+		return nil, fmt.Errorf("error parsing login packet: %w", err)
 	}
-	log.Printf("Successfully decrypted packet: Account=%d, Password='%s', Version=%d",
-		packet.AccountNumber, packet.Password, packet.ClientVersion)
 
-	serverConn, err := net.Dial("tcp", p.RealServerAddr)
+	log.Printf("Login: Successfully decrypted packet: Account=%d, Password='%s'",
+		packet.AccountNumber, packet.Password)
+	return packet, nil
+}
+
+// forwardLoginPacket connects to the real server and sends the re-encoded packet.
+// It returns the established server connection or an error.
+func (s *Server) forwardLoginPacket(packet *login.LoginPacket) (*protocol.Connection, error) {
+	serverConn, err := net.Dial("tcp", s.RealServerAddr)
 	if err != nil {
-		log.Printf("Failed to connect to real server at %s: %v", p.RealServerAddr, err)
-		return
+		return nil, fmt.Errorf("failed to connect to real server at %s: %w", s.RealServerAddr, err)
 	}
 	protoServerConn := protocol.NewConnection(serverConn)
-	defer protoServerConn.Close()
-	log.Printf("Successfully connected to real server %s", p.RealServerAddr)
+	log.Printf("Login: Successfully connected to real server %s", s.RealServerAddr)
 
-	// 5. Re-serialize the packet, but this time encrypt it with the TARGET server's public key.
 	outgoingMessageBytes, err := packet.Marshal()
 	if err != nil {
-		log.Printf("Failed to marshal outgoing packet: %v", err)
-		return
+		protoServerConn.Close() // Clean up connection on failure
+		return nil, fmt.Errorf("failed to marshal outgoing packet: %w", err)
 	}
 
-	// 6. Send the re-encrypted packet to the real server.
 	if err := protoServerConn.WriteMessage(outgoingMessageBytes); err != nil {
-		log.Printf("Failed to send login packet to real server: %v", err)
-		return
+		protoServerConn.Close() // Clean up connection on failure
+		return nil, fmt.Errorf("failed to send login packet to real server: %w", err)
 	}
-	log.Println("Sent re-encrypted login packet to real server.")
 
-	// 7. Bridge the two connections to shuttle data back and forth.
-	log.Println("Bridging connections...")
-	var wg sync.WaitGroup
-	wg.Add(2)
+	log.Println("Login: Sent re-encrypted login packet to real server.")
+	return protoServerConn, nil
+}
 
-	go func() {
-		defer wg.Done()
-		io.Copy(serverConn, clientConn)
-		serverConn.Close()
-	}()
-	go func() {
-		defer wg.Done()
+// bridgeConnections handles shuttling data between the client and server.
+// For the login server, this is a simple one-way copy from server to client.
+func (s *Server) bridgeConnections(client *protocol.Connection, server *protocol.Connection) {
+	log.Println("Login: Bridging server response to client...")
 
-		// Create our hex dumper with a clear label.
-		dumper := &proxy.HexDumpWriter{Prefix: "SERVER -> CLIENT"}
+	// For the login server, we only need to copy the response from the server
+	// back to the client. There is no further client->server communication
+	// on this specific connection.
 
-		// Create a TeeReader. It reads from serverConn.
-		// Everything it reads is also written to our dumper.
-		teeReader := io.TeeReader(serverConn, dumper)
+	// Create our hex dumper with a clear label.
+	dumper := &proxy.HexDumpWriter{Prefix: "SERVER -> CLIENT"}
+	teeReader := io.TeeReader(server.RawConn(), dumper)
 
-		// Now, copy from the teeReader to the client. The client gets the
-		// exact same data, but we get to see it as it passes through.
-		io.Copy(clientConn, teeReader)
+	// Copy the server's response (e.g., character list) to the client.
+	bytesCopied, err := io.Copy(client.RawConn(), teeReader)
+	if err != nil {
+		log.Printf("Login: Error during bridge copy: %v", err)
+	}
 
-		// Once copying is done, close the write-half of the client connection.
-		clientConn.(*net.TCPConn).CloseWrite()
-	}()
-
-	wg.Wait()
-	log.Printf("Connection bridge for %s closed.", clientConn.RemoteAddr())
+	log.Printf("Login: Bridged %d bytes from server to client.", bytesCopied)
 }

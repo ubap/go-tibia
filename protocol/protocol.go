@@ -6,7 +6,7 @@ import (
 	"io"
 )
 
-func readString(r io.Reader) (string, error) {
+func ReadString(r io.Reader) (string, error) {
 	// 1. Read the 2-byte length prefix.
 	var length uint16
 	if err := binary.Read(r, binary.LittleEndian, &length); err != nil {
