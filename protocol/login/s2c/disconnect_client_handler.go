@@ -1,10 +1,15 @@
-package handlers
+package s2c
 
 import (
 	"goTibia/protocol"
+	"goTibia/protocol/login"
 	"io"
 	"log"
 )
+
+func init() {
+	login.S2CHandlers.Register(ServerOpcodeDisconnectClient, &DisconnectClientHandler{})
+}
 
 type DisconnectClientHandler struct {
 }

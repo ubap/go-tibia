@@ -8,28 +8,26 @@ import (
 	"goTibia/protocol/crypto"
 	"goTibia/protocol/login"
 	"goTibia/proxy"
-	"goTibia/proxy/login/handlers"
 	"io"
 	"log"
 	"net"
+	// CRITICAL: Blank import the handler package. This ensures its
+	// init() functions are executed, populating the global registry.
+	_ "goTibia/protocol/login/s2c"
 )
 
 type Server struct {
-	ListenAddr      string
-	RealServerAddr  string
-	HandlerRegistry *protocol.HandlerRegistry
+	ListenAddr     string
+	RealServerAddr string
+	S2CHandlers    *protocol.HandlerRegistry
 	// You could add other dependencies here, like a specific logger.
 }
 
 func NewServer(listenAddr, realServerAddr string) *Server {
-	registry := protocol.NewHandlerRegistry()
-	registry.Register(login.ServerOpcodeDisconnectClient, &handlers.DisconnectClientHandler{})
-	registry.Register(login.ServerOpcodeMOTD, &handlers.MOTDHandler{})
-
 	return &Server{
-		ListenAddr:      listenAddr,
-		RealServerAddr:  realServerAddr,
-		HandlerRegistry: registry,
+		ListenAddr:     listenAddr,
+		RealServerAddr: realServerAddr,
+		S2CHandlers:    login.S2CHandlers,
 	}
 }
 
@@ -179,7 +177,7 @@ func (s *Server) processStream(decryptedPayload []byte) ([]byte, error) {
 		opcode := opcodeBuffer[0]
 		log.Printf("Login: Processing opcode %#x", opcode)
 
-		handler, err := s.HandlerRegistry.Get(opcode)
+		handler, err := s.S2CHandlers.Get(opcode)
 		if err != nil {
 			log.Printf("Login: Failed to get handler for opcode %#x, short-circuiting", opcode)
 			return decryptedPayload, err
