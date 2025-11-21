@@ -3,6 +3,7 @@ package login
 import (
 	"fmt"
 	"goTibia/protocol"
+	"goTibia/protocol/crypto"
 	"goTibia/protocol/login"
 	"goTibia/proxy"
 	"goTibia/proxy/login/handlers"
@@ -69,8 +70,23 @@ func (s *Server) handleConnection(clientConn net.Conn) {
 	}
 	defer protoServerConn.Close()
 
+	message, err := protoServerConn.ReadMessage()
+	if err != nil {
+		return
+	}
+
+	decrypted, err := crypto.DecryptXTEA(message, loginPacket.XTEAKey)
+	if err != nil {
+		return
+	}
+
+	dumper := &proxy.HexDumpWriter{Prefix: "SERVER -> CLIENT"}
+	dumper.Write(decrypted)
+
+	protoClientConn.WriteMessage(message)
+
 	// Phase 3: Bridge the connection
-	s.bridgeConnections(protoClientConn, protoServerConn)
+	//s.bridgeConnections(protoClientConn, protoServerConn)
 
 	log.Printf("Login: Connection for %s finished.", protoClientConn.RemoteAddr())
 }
