@@ -44,17 +44,17 @@ func (s *Server) Start() error {
 }
 
 func (p *Server) handleConnection(clientConn net.Conn) {
-	protoConn := protocol.NewConnection(clientConn)
-	defer protoConn.Close()
+	protoClientConn := protocol.NewConnection(clientConn)
+	defer protoClientConn.Close()
 
-	log.Printf("Accepted connection from %s", protoConn.RemoteAddr())
+	log.Printf("Accepted connection from %s", protoClientConn.RemoteAddr())
 
-	messageBytes, err := protoConn.ReadMessage()
+	messageBytes, err := protoClientConn.ReadMessage()
 	if err != nil {
 		if err == io.EOF {
-			log.Printf("Client %s disconnected.", protoConn.RemoteAddr())
+			log.Printf("Client %s disconnected.", protoClientConn.RemoteAddr())
 		} else {
-			log.Printf("Error reading message from %s: %v", protoConn.RemoteAddr(), err)
+			log.Printf("Error reading message from %s: %v", protoClientConn.RemoteAddr(), err)
 		}
 		return // End the handler for this connection.
 	}
