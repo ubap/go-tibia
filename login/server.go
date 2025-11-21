@@ -174,6 +174,21 @@ func (s *Server) receiveLoginResultMessage(decryptedPayload []byte) (*LoginResul
 			log.Print("DisconnectClientHandler: " + disconnectedReason)
 			message.ClientDisconnected = true
 			message.ClientDisconnectedReason = disconnectedReason
+		case S2COpcodeMOTD:
+			motd, err := ReadMotd(commandStream)
+			if err != nil {
+				return nil, err
+			}
+			message.Motd = motd
+		case S2COpcodeCharacterList:
+			charList, err := ReadCharacterList(commandStream)
+			if err != nil {
+				return nil, err
+			}
+			message.CharacterList = charList
+		default:
+			panic("unknown opcode " + fmt.Sprintf("%#x", opcode))
 		}
+
 	}
 }
