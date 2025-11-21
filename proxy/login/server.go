@@ -1,6 +1,8 @@
 package login
 
 import (
+	"bytes"
+	"encoding/binary"
 	"fmt"
 	"goTibia/protocol"
 	"goTibia/protocol/crypto"
@@ -13,22 +15,20 @@ import (
 )
 
 type Server struct {
-	ListenAddr     string
-	RealServerAddr string
+	ListenAddr      string
+	RealServerAddr  string
+	HandlerRegistry *protocol.HandlerRegistry
 	// You could add other dependencies here, like a specific logger.
 }
 
 func NewServer(listenAddr, realServerAddr string) *Server {
-	// Create the default handler instance here in the application layer.
-	defaultHandler := &handlers.DefaultPassThroughHandler{}
-
-	// Pass it to the registry constructor.
-	registry := protocol.NewHandlerRegistry(defaultHandler)
-	registry.Register(login.ServerOpcodeMOTD, &handlers.MOTDHandler{})
+	registry := protocol.NewHandlerRegistry()
+	registry.Register(login.ServerOpcodeDisconnectClient, &handlers.DisconnectClientHandler{})
 
 	return &Server{
-		ListenAddr:     listenAddr,
-		RealServerAddr: realServerAddr,
+		ListenAddr:      listenAddr,
+		RealServerAddr:  realServerAddr,
+		HandlerRegistry: registry,
 	}
 }
 
@@ -82,11 +82,16 @@ func (s *Server) handleConnection(clientConn net.Conn) {
 
 	dumper := &proxy.HexDumpWriter{Prefix: "SERVER -> CLIENT"}
 	dumper.Write(decrypted)
+	// 2 byte - message length
+	// 1 byte - opcode
 
+	s.processStream(decrypted)
+
+	message, err = crypto.EncryptXTEA(decrypted, loginPacket.XTEAKey)
+	if err != nil {
+		return
+	}
 	protoClientConn.WriteMessage(message)
-
-	// Phase 3: Bridge the connection
-	//s.bridgeConnections(protoClientConn, protoServerConn)
 
 	log.Printf("Login: Connection for %s finished.", protoClientConn.RemoteAddr())
 }
@@ -135,24 +140,57 @@ func (s *Server) forwardLoginPacket(packet *login.LoginPacket) (*protocol.Connec
 	return protoServerConn, nil
 }
 
-// bridgeConnections handles shuttling data between the client and server.
-// For the login server, this is a simple one-way copy from server to client.
-func (s *Server) bridgeConnections(client *protocol.Connection, server *protocol.Connection) {
-	log.Println("Login: Bridging server response to client...")
+/*
+*
+[ 2-byte Inner Length | Opcode 1 | Data 1 | Opcode 2 | Data 2 | ... | Padding ]
 
-	// For the login server, we only need to copy the response from the server
-	// back to the client. There is no further client->server communication
-	// on this specific connection.
+	\___________________/ \_____________________________________/
+	        |                             |
+	     (Header)                 (Stream of Commands)
+*/
+func (s *Server) processStream(decryptedPayload []byte) ([]byte, error) {
+	// A reader for the incoming decrypted stream.
+	streamReader := bytes.NewReader(decryptedPayload)
 
-	// Create our hex dumper with a clear label.
-	dumper := &proxy.HexDumpWriter{Prefix: "SERVER -> CLIENT"}
-	teeReader := io.TeeReader(server.RawConn(), dumper)
-
-	// Copy the server's response (e.g., character list) to the client.
-	bytesCopied, err := io.Copy(client.RawConn(), teeReader)
-	if err != nil {
-		log.Printf("Login: Error during bridge copy: %v", err)
+	// --- 1. Read the single length header at the beginning of the stream. ---
+	var streamLength uint16
+	if err := binary.Read(streamReader, binary.LittleEndian, &streamLength); err != nil {
+		return nil, fmt.Errorf("error reading stream length header: %w", err)
 	}
 
-	log.Printf("Login: Bridged %d bytes from server to client.", bytesCopied)
+	// Create a new reader that is limited to reading only the command stream.
+	commandStream := io.LimitReader(streamReader, int64(streamLength))
+
+	// --- 2. Loop until the command stream is empty. ---
+	for {
+		// Read the next opcode.
+		opcodeBuffer := make([]byte, 1)
+		n, err := commandStream.Read(opcodeBuffer)
+		if err == io.EOF {
+			break // Successfully reached the end of the stream.
+		}
+		if err != nil {
+			return nil, fmt.Errorf("error reading opcode from stream: %w", err)
+		}
+		if n == 0 {
+			break
+		}
+		opcode := opcodeBuffer[0]
+		log.Printf("Login: Processing opcode %#x", opcode)
+
+		handler, err := s.HandlerRegistry.Get(opcode)
+		if err != nil {
+			log.Printf("Login: Failed to get handler for opcode %#x, short-circuiting", opcode)
+			return decryptedPayload, err
+		}
+
+		err = handler.Handle(commandStream)
+		if err != nil {
+			log.Printf("Login: Handler for opcode %d returned error: %v", opcode, err)
+			return decryptedPayload, err
+		}
+
+	}
+
+	return decryptedPayload, nil
 }
