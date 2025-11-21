@@ -1,6 +1,7 @@
-package main
+package proxy
 
 import (
+	"encoding/hex"
 	"fmt"
 	"strings"
 )
@@ -26,4 +27,18 @@ func formatAsGoSlice(data []byte) string {
 
 	builder.WriteString("\n}")
 	return builder.String()
+}
+
+type HexDumpWriter struct {
+	// Prefix allows us to label the output, e.g., "SERVER->" or "CLIENT->"
+	Prefix string
+}
+
+// Write is the only method needed to satisfy the io.Writer interface.
+func (w *HexDumpWriter) Write(p []byte) (n int, err error) {
+	fmt.Printf("\n--- Data Dump (%s) ---\n", w.Prefix)
+	fmt.Printf("%s", hex.Dump(p))
+	fmt.Println("--- End of Dump ---")
+	// We return the number of bytes processed and no error.
+	return len(p), nil
 }
