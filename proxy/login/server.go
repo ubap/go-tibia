@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"goTibia/protocol"
-	"goTibia/protocol/crypto"
 	"goTibia/protocol/login"
 	"goTibia/proxy"
 	"io"
@@ -55,47 +54,39 @@ func (s *Server) handleConnection(clientConn net.Conn) {
 	log.Printf("Login: Accepted connection from %s", protoClientConn.RemoteAddr())
 
 	// Phase 1: Receive and Decode
-	loginPacket, err := s.receiveLoginPacket(protoClientConn)
+	loginPacket, err := s.receiveCredentialsPacket(protoClientConn)
 	if err != nil {
-		log.Printf("Login: Failed to process login packet from %s: %v", protoClientConn.RemoteAddr(), err)
+		log.Printf("Login: Failed to process credentials packet from %s: %v", protoClientConn.RemoteAddr(), err)
 		return
 	}
 
 	// Phase 2: Forward and Re-encode
 	protoServerConn, err := s.forwardLoginPacket(loginPacket)
 	if err != nil {
-		log.Printf("Login: Failed to forward login packet for %s: %v", protoClientConn.RemoteAddr(), err)
+		log.Printf("Login: Failed to forward credentials packet for %s: %v", protoClientConn.RemoteAddr(), err)
 		return
 	}
 	defer protoServerConn.Close()
+
+	protoServerConn.EnableXTEA(loginPacket.XTEAKey)
+	protoClientConn.EnableXTEA(loginPacket.XTEAKey)
 
 	message, err := protoServerConn.ReadMessage()
 	if err != nil {
 		return
 	}
 
-	decrypted, err := crypto.DecryptXTEA(message, loginPacket.XTEAKey)
-	if err != nil {
-		return
-	}
-
 	dumper := &proxy.HexDumpWriter{Prefix: "SERVER -> CLIENT"}
-	dumper.Write(decrypted)
-	// 2 byte - message length
-	// 1 byte - opcode
+	dumper.Write(message)
 
-	s.processStream(decrypted)
+	s.processStream(message)
 
-	message, err = crypto.EncryptXTEA(decrypted, loginPacket.XTEAKey)
-	if err != nil {
-		return
-	}
 	protoClientConn.WriteMessage(message)
 
 	log.Printf("Login: Connection for %s finished.", protoClientConn.RemoteAddr())
 }
 
-func (s *Server) receiveLoginPacket(client *protocol.Connection) (*login.LoginPacket, error) {
+func (s *Server) receiveCredentialsPacket(client *protocol.Connection) (*login.LoginPacket, error) {
 	messageBytes, err := client.ReadMessage()
 	if err != nil {
 		if err == io.EOF {
@@ -104,9 +95,9 @@ func (s *Server) receiveLoginPacket(client *protocol.Connection) (*login.LoginPa
 		return nil, fmt.Errorf("error reading message: %w", err)
 	}
 
-	packet, err := login.ParseLoginPacket(messageBytes)
+	packet, err := login.ParseCredentialsPacket(messageBytes)
 	if err != nil {
-		return nil, fmt.Errorf("error parsing login packet: %w", err)
+		return nil, fmt.Errorf("error parsing credentials packet: %w", err)
 	}
 
 	log.Printf("Login: Successfully decrypted packet: Account=%d, Password='%s'",

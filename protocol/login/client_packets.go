@@ -54,7 +54,7 @@ func (lp *LoginPacket) Marshal() ([]byte, error) {
 	return fullPacket.Bytes(), nil
 }
 
-func ParseLoginPacket(data []byte) (*LoginPacket, error) {
+func ParseCredentialsPacket(data []byte) (*LoginPacket, error) {
 	// Use a bytes.Reader to treat the byte slice like a file or network stream.
 	// This makes it easy to read structured data sequentially.
 	reader := bytes.NewReader(data)

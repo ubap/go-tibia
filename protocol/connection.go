@@ -2,6 +2,7 @@ package protocol
 
 import (
 	"encoding/binary"
+	"goTibia/protocol/crypto"
 	"io"
 	"net"
 )
@@ -9,12 +10,19 @@ import (
 // Connection is a wrapper around a raw network connection (net.Conn)
 // that understands the Tibia protocol's message framing.
 type Connection struct {
-	conn net.Conn
+	conn        net.Conn
+	XTEAEnabled bool
+	XTEAKey     [4]uint32
 }
 
 // NewConnection creates a new protocol-aware connection wrapper.
 func NewConnection(conn net.Conn) *Connection {
 	return &Connection{conn: conn}
+}
+
+func (c *Connection) EnableXTEA(key [4]uint32) {
+	c.XTEAEnabled = true
+	c.XTEAKey = key
 }
 
 // ReadMessage reads a single, complete message from the stream.
@@ -33,6 +41,10 @@ func (c *Connection) ReadMessage() ([]byte, error) {
 		return nil, err
 	}
 
+	if c.XTEAEnabled {
+		return crypto.DecryptXTEA(payload, c.XTEAKey)
+	}
+
 	return payload, nil
 }
 
@@ -44,8 +56,16 @@ func (c *Connection) WriteMessage(payload []byte) error {
 		return err
 	}
 
-	// Write the actual message payload.
-	_, err := c.conn.Write(payload)
+	if !c.XTEAEnabled {
+		_, err := c.conn.Write(payload)
+		return err
+	}
+
+	encryptedPayload, err := crypto.EncryptXTEA(payload, c.XTEAKey)
+	if err != nil {
+		return err
+	}
+	_, err = c.conn.Write(encryptedPayload)
 	return err
 }
 

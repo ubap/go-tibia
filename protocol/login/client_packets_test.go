@@ -26,7 +26,7 @@ func Test(t *testing.T) {
 	marshal, err := packet.Marshal()
 	require.NoError(t, err, "Marshalling login packet should not fail")
 
-	loginPacket, err := ParseLoginPacket(marshal)
+	loginPacket, err := ParseCredentialsPacket(marshal)
 	require.NoError(t, err, "Failed to parse login packet")
 
 	require.Equal(t, packet, *loginPacket, "Parsed packet does not match original")
@@ -49,7 +49,7 @@ func TestParseLoginPacket_GoldenSample(t *testing.T) {
 		0x6d,
 	}
 
-	packet, err := ParseLoginPacket(capturedPacket)
+	packet, err := ParseCredentialsPacket(capturedPacket)
 	require.NoError(t, err, "Failed to parse login packet")
 
 	expected := LoginPacket{
