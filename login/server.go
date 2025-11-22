@@ -1,11 +1,8 @@
 package login
 
 import (
-	"bytes"
-	"encoding/binary"
 	"fmt"
 	"goTibia/protocol"
-	"io"
 	"log"
 	"net"
 )
@@ -75,7 +72,7 @@ func (s *Server) handleConnection(clientConn net.Conn) {
 		return
 	}
 
-	resultMessage, err := s.receiveLoginResultMessage(message.ReadAll())
+	resultMessage, err := s.receiveLoginResultMessage(message)
 	if err != nil {
 		return
 	}
@@ -123,46 +120,32 @@ func (s *Server) forwardLoginPacket(packet *ClientCredentialPacket) (*protocol.C
 	        |                             |
 	     (Header)                 (Stream of Commands)
 */
-func (s *Server) receiveLoginResultMessage(decryptedPayload []byte) (*LoginResultMessage, error) {
-	// A reader for the incoming decrypted stream.
-	streamReader := bytes.NewReader(decryptedPayload)
+func (s *Server) receiveLoginResultMessage(packetReader *protocol.PacketReader) (*LoginResultMessage, error) {
 	message := LoginResultMessage{}
-
-	// --- 1. Read the single length header at the beginning of the stream. ---
-	var streamLength uint16
-	if err := binary.Read(streamReader, binary.LittleEndian, &streamLength); err != nil {
-		return nil, fmt.Errorf("error reading stream length header: %w", err)
-	}
-
-	// Create a new reader that is limited to reading only the command stream.
-	commandStream := io.LimitReader(streamReader, int64(streamLength))
 
 	// --- 2. Loop until the command stream is empty. ---
 	for {
 		// Read the next opcode.
-		opcode, err := protocol.ReadByte(commandStream)
-		if err == io.EOF {
-			return &message, nil
-		}
-		if err != nil {
-			return nil, err
+		opcode := packetReader.ReadByte()
+		if packetReader.Err() != nil {
+			return nil, packetReader.Err()
 		}
 		log.Printf("Login: Processing opcode %#x", opcode)
 
 		switch opcode {
 		case S2COpcodeDisconnectClient:
-			disconnectedReason, _ := protocol.ReadString(commandStream)
+			disconnectedReason := packetReader.ReadString()
 			log.Print("DisconnectClientHandler: " + disconnectedReason)
 			message.ClientDisconnected = true
 			message.ClientDisconnectedReason = disconnectedReason
 		case S2COpcodeMOTD:
-			motd, err := ReadMotd(commandStream)
+			motd, err := ReadMotd(packetReader)
 			if err != nil {
 				return nil, err
 			}
 			message.Motd = motd
 		case S2COpcodeCharacterList:
-			charList, err := ReadCharacterList(commandStream)
+			charList, err := ReadCharacterList(packetReader)
 			if err != nil {
 				return nil, err
 			}
