@@ -119,3 +119,25 @@ func (c *Connection) RemoteAddr() net.Addr {
 func (c *Connection) RawConn() net.Conn {
 	return c.conn
 }
+
+func (c *Connection) SendPacket(packet Encodable) error {
+	// 1. Create (or grab from pool) a Writer
+	writer := NewPacketWriter()
+
+	// 2. Encode logic
+	packet.Encode(writer)
+
+	// 3. Check for logical errors during writing
+	if err := writer.Err(); err != nil {
+		return err
+	}
+
+	// 4. Get the raw bytes (Payload only)
+	payload, err := writer.GetBytes()
+	if err != nil {
+		return err
+	}
+
+	// 5. Send to connection (Handles Encryption + Length Prefix)
+	return c.WriteMessage(payload)
+}
