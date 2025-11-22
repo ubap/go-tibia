@@ -11,7 +11,6 @@ import (
 type Server struct {
 	ListenAddr     string
 	RealServerAddr string
-	// You could add other dependencies here, like a specific logger.
 }
 
 func NewServer(listenAddr, realServerAddr string) *Server {
@@ -115,14 +114,6 @@ func (s *Server) forwardLoginPacket(packet *ClientCredentialPacket) (*protocol.C
 	return protoServerConn, nil
 }
 
-/*
-*
-[ 2-byte Inner Length | Opcode 1 | Data 1 | Opcode 2 | Data 2 | ... | Padding ]
-
-	\___________________/ \_____________________________________/
-	        |                             |
-	     (Header)                 (Stream of Commands)
-*/
 func (s *Server) receiveLoginResultMessage(packetReader *protocol.PacketReader) (*LoginResultMessage, error) {
 	message := LoginResultMessage{}
 
