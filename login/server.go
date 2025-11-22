@@ -2,6 +2,7 @@ package login
 
 import (
 	"fmt"
+	"goTibia/packets"
 	"goTibia/protocol"
 	"io"
 	"log"
@@ -49,7 +50,7 @@ func (s *Server) handleConnection(clientConn net.Conn) {
 		return
 	}
 
-	loginPacket, err := ParseCredentialsPacket(packetReader)
+	loginPacket, err := packets.ParseCredentialsPacket(packetReader)
 	if err != nil {
 		log.Printf("Login: Failed to parse login packet: %v", err)
 		return
@@ -91,7 +92,7 @@ func (s *Server) handleConnection(clientConn net.Conn) {
 
 // forwardLoginPacket connects to the real server and sends the re-encoded packet.
 // It returns the established server connection or an error.
-func (s *Server) forwardLoginPacket(packet *ClientCredentialPacket) (*protocol.Connection, error) {
+func (s *Server) forwardLoginPacket(packet *packets.ClientCredentialPacket) (*protocol.Connection, error) {
 	serverConn, err := net.Dial("tcp", s.RealServerAddr)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to real server at %s: %w", s.RealServerAddr, err)
@@ -114,8 +115,8 @@ func (s *Server) forwardLoginPacket(packet *ClientCredentialPacket) (*protocol.C
 	return protoServerConn, nil
 }
 
-func (s *Server) receiveLoginResultMessage(packetReader *protocol.PacketReader) (*LoginResultMessage, error) {
-	message := LoginResultMessage{}
+func (s *Server) receiveLoginResultMessage(packetReader *protocol.PacketReader) (*packets.LoginResultMessage, error) {
+	message := packets.LoginResultMessage{}
 
 	// --- 2. Loop until the command stream is empty. ---
 	for {
@@ -131,19 +132,19 @@ func (s *Server) receiveLoginResultMessage(packetReader *protocol.PacketReader) 
 		log.Printf("Login: Processing opcode %#x", opcode)
 
 		switch opcode {
-		case S2COpcodeDisconnectClient:
+		case packets.S2COpcodeDisconnectClient:
 			disconnectedReason := packetReader.ReadString()
 			log.Print("DisconnectClientHandler: " + disconnectedReason)
 			message.ClientDisconnected = true
 			message.ClientDisconnectedReason = disconnectedReason
-		case S2COpcodeMOTD:
-			motd, err := ReadMotd(packetReader)
+		case packets.S2COpcodeMOTD:
+			motd, err := packets.ReadMotd(packetReader)
 			if err != nil {
 				return nil, err
 			}
 			message.Motd = motd
-		case S2COpcodeCharacterList:
-			charList, err := ReadCharacterList(packetReader)
+		case packets.S2COpcodeCharacterList:
+			charList, err := packets.ReadCharacterList(packetReader)
 			if err != nil {
 				return nil, err
 			}
