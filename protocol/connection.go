@@ -2,6 +2,7 @@ package protocol
 
 import (
 	"encoding/binary"
+	"fmt"
 	"goTibia/protocol/crypto"
 	"io"
 	"net"
@@ -39,13 +40,23 @@ func (c *Connection) ReadMessage() (*PacketReader, error) {
 		return nil, err
 	}
 
-	// 3. Decrypt if necessary
 	if c.XTEAEnabled {
 		var err error
 		payload, err = crypto.DecryptXTEA(payload, c.XTEAKey)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("decryption failed: %w", err)
 		}
+		if len(payload) < 2 {
+			return nil, fmt.Errorf("decrypted payload too short: %d bytes", len(payload))
+		}
+		innerLength := binary.LittleEndian.Uint16(payload[0:2])
+
+		requiredSize := int(innerLength) + 2
+		if requiredSize > len(payload) {
+			return nil, fmt.Errorf("malformed packet: inner length %d exceeds buffer size %d", innerLength, len(payload))
+		}
+
+		payload = payload[2:requiredSize]
 	}
 
 	return NewPacketReader(payload), nil
