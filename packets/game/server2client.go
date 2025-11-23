@@ -34,6 +34,11 @@ type MoveCreatureMsg struct {
 
 type PingMsg struct{}
 
+type MagicEffect struct {
+	Pos  types.Position
+	Type byte
+}
+
 func ParseLoginResultMessage(pr *protocol.PacketReader) (*LoginResponse, error) {
 	lr := &LoginResponse{}
 
@@ -93,4 +98,11 @@ func ParseMoveCreature(pr *protocol.PacketReader) (*MoveCreatureMsg, error) {
 	msg.ToPos.Z = pr.ReadByte()
 
 	return msg, nil
+}
+
+func ParseMagicEffect(pr *protocol.PacketReader) (*MagicEffect, error) {
+	me := &MagicEffect{}
+	me.Pos = readPosition(pr)
+	me.Type = pr.ReadByte()
+	return me, nil
 }

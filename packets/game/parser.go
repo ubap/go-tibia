@@ -29,6 +29,8 @@ func ParseS2CPacket(opcode uint8, pr *protocol.PacketReader) (S2CPacket, error) 
 	case S2CPlayerStats:
 		log.Println("player stats")
 		return nil, ErrUnknownOpcode
+	case S2CMagicEffect:
+		return ParseMagicEffect(pr)
 
 	default:
 		return nil, ErrUnknownOpcode

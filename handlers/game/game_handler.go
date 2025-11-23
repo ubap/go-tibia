@@ -109,6 +109,8 @@ func (h *GameHandler) processPacketFromServer(packet game.S2CPacket) {
 	case *game.MapDescription:
 		h.State.SetPosition(p.Pos)
 	case *game.MoveCreatureMsg:
-		log.Printf("[Game] MoveCreatureMsg %v", p)
+		//log.Printf("[Game] MoveCreatureMsg %v", p)
+	case *game.MagicEffect:
+		log.Printf("[Game] MagicEffect %v", p)
 	}
 }
