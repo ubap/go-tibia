@@ -6,7 +6,7 @@ import (
 	"goTibia/protocol/crypto"
 )
 
-// Special packet - first received from the client during login.
+// ClientCredentialPacket is a special packet. It's the first packet sent by the client to the server
 type ClientCredentialPacket struct {
 	Protocol      uint8
 	ClientOS      uint16
@@ -14,7 +14,6 @@ type ClientCredentialPacket struct {
 	DatSignature  uint32
 	SprSignature  uint32
 	PicSignature  uint32
-	// RSA Encrypted part starts here
 	XTEAKey       [4]uint32
 	AccountNumber uint32
 	Password      string
@@ -28,10 +27,10 @@ func (lp *ClientCredentialPacket) Encode(pw *protocol.PacketWriter) {
 	pw.WriteUint32(lp.SprSignature)
 	pw.WriteUint32(lp.PicSignature)
 
-	// RSA Encrypted part
+	// RSA Encrypted part starts here
 	toEncrypt := protocol.NewPacketWriter()
-	// Write the check byte, XTEA key, account number, and password.
-	toEncrypt.WriteByte(0x00)
+
+	toEncrypt.WriteByte(0x00) // Write the check check byte
 	toEncrypt.WriteUint32(lp.XTEAKey[0])
 	toEncrypt.WriteUint32(lp.XTEAKey[1])
 	toEncrypt.WriteUint32(lp.XTEAKey[2])
