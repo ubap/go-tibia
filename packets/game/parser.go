@@ -24,6 +24,8 @@ func ParseS2CPacket(opcode uint8, pr *protocol.PacketReader) (S2CPacket, error) 
 		return ParseMapDescription(pr)
 	case S2CMoveCreature:
 		return ParseMoveCreature(pr)
+	case S2CPing:
+		return PingMsg{}, nil
 	case S2CPlayerStats:
 		log.Println("player stats")
 		return nil, ErrUnknownOpcode

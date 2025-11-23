@@ -6,4 +6,5 @@ const (
 	S2CMapDescription  uint8 = 0x64
 	S2CMoveCreature    uint8 = 0x6D
 	S2CPlayerStats     uint8 = 0xA0
+	S2CPing            uint8 = 0x1E
 )

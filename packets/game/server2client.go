@@ -32,6 +32,8 @@ type MoveCreatureMsg struct {
 	KnownSourcePosition bool // True if FromPos/StackPos is valid. False if CreatureID is valid.
 }
 
+type PingMsg struct{}
+
 func ParseLoginResultMessage(pr *protocol.PacketReader) (*LoginResponse, error) {
 	lr := &LoginResponse{}
 
