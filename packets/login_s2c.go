@@ -2,6 +2,7 @@ package packets
 
 import (
 	"errors"
+	"fmt"
 	"goTibia/protocol"
 	"log"
 	"strings"
@@ -26,6 +27,49 @@ func (lp *LoginResultMessage) Encode(pw *protocol.PacketWriter) {
 		pw.WriteByte(S2COpcodeCharacterList)
 		WriteCharacterList(pw, lp.CharacterList)
 	}
+}
+
+func ParseLoginResultMessage(pr *protocol.PacketReader) (*LoginResultMessage, error) {
+	message := LoginResultMessage{}
+	for pr.Remaining() > 0 {
+		opcode := pr.ReadByte()
+		if err := pr.Err(); err != nil {
+			return nil, fmt.Errorf("failed to read opcode: %w", err)
+		}
+
+		switch opcode {
+		case S2COpcodeDisconnectClient:
+			disconnectedReason := pr.ReadString()
+			if err := pr.Err(); err != nil {
+				return nil, fmt.Errorf("failed to read disconnect reason: %w", err)
+			}
+			message.ClientDisconnected = true
+			message.ClientDisconnectedReason = disconnectedReason
+
+		case S2COpcodeMOTD:
+			motd, err := ParseMotd(pr)
+			if err != nil {
+				return nil, fmt.Errorf("failed to parse MOTD: %w", err)
+			}
+			message.Motd = motd
+
+		case S2COpcodeCharacterList:
+			charList, err := ParseCharacterList(pr)
+			if err != nil {
+				return nil, fmt.Errorf("failed to parse CharList: %w", err)
+			}
+			message.CharacterList = charList
+
+		default:
+			return nil, fmt.Errorf("unknown login opcode: %#x", opcode)
+		}
+
+		if err := pr.Err(); err != nil {
+			return nil, fmt.Errorf("error parsing packet content for opcode %#x: %w", opcode, err)
+		}
+
+	}
+	return &message, nil
 }
 
 // endregion LoginResultMessage

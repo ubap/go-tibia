@@ -79,7 +79,7 @@ func (s *Server) handleConnection(clientConn net.Conn) {
 		return
 	}
 
-	resultMessage, err := s.receiveLoginResultMessage(message)
+	resultMessage, err := packets.ParseLoginResultMessage(message)
 	if err != nil {
 		log.Printf("Login: Failed to receive login result message for %s: %v", protoClientConn.RemoteAddr(), err)
 		return
@@ -92,49 +92,6 @@ func (s *Server) handleConnection(clientConn net.Conn) {
 	}
 
 	log.Printf("Login: Connection for %s finished.", protoClientConn.RemoteAddr())
-}
-
-func (s *Server) receiveLoginResultMessage(pr *protocol.PacketReader) (*packets.LoginResultMessage, error) {
-	message := packets.LoginResultMessage{}
-	for pr.Remaining() > 0 {
-		opcode := pr.ReadByte()
-		if err := pr.Err(); err != nil {
-			return nil, fmt.Errorf("failed to read opcode: %w", err)
-		}
-
-		log.Printf("Login: Processing opcode %#x", opcode)
-
-		switch opcode {
-		case packets.S2COpcodeDisconnectClient:
-			disconnectedReason := pr.ReadString()
-			if err := pr.Err(); err != nil {
-				return nil, fmt.Errorf("failed to read disconnect reason: %w", err)
-			}
-			log.Print("DisconnectClientHandler: " + disconnectedReason)
-			message.ClientDisconnected = true
-			message.ClientDisconnectedReason = disconnectedReason
-		case packets.S2COpcodeMOTD:
-			motd, err := packets.ParseMotd(pr)
-			if err != nil {
-				return nil, fmt.Errorf("failed to parse MOTD: %w", err)
-			}
-			message.Motd = motd
-		case packets.S2COpcodeCharacterList:
-			charList, err := packets.ParseCharacterList(pr)
-			if err != nil {
-				return nil, fmt.Errorf("failed to parse CharList: %w", err)
-			}
-			message.CharacterList = charList
-		default:
-			return nil, fmt.Errorf("unknown login opcode: %#x", opcode)
-		}
-
-		if err := pr.Err(); err != nil {
-			return nil, fmt.Errorf("error parsing packet content for opcode %#x: %w", opcode, err)
-		}
-
-	}
-	return &message, nil
 }
 
 func (s *Server) connectToServer() (*protocol.Connection, error) {
