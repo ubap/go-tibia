@@ -1,12 +1,12 @@
 package main
 
 import (
-	"goTibia/login"
+	"goTibia/login_server"
 	"log"
 )
 
 func main() {
-	loginServer := login.NewServer(":7171", "world.fibula.app:7171")
+	loginServer := login_server.NewServer(":7171", "world.fibula.app:7171")
 
 	go func() {
 		log.Println("Starting login server...")
