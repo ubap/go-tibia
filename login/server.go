@@ -94,26 +94,6 @@ func (s *Server) handleConnection(clientConn net.Conn) {
 	log.Printf("Login: Connection for %s finished.", protoClientConn.RemoteAddr())
 }
 
-// forwardLoginPacket connects to the real server and sends the re-encoded packet.
-// It returns the established server connection or an error.
-func (s *Server) forwardLoginPacket(packet *packets.ClientCredentialPacket) (*protocol.Connection, error) {
-	serverConn, err := net.Dial("tcp", s.RealServerAddr)
-	if err != nil {
-		return nil, fmt.Errorf("failed to connect to real server at %s: %w", s.RealServerAddr, err)
-	}
-	protoServerConn := protocol.NewConnection(serverConn)
-	log.Printf("Login: Successfully connected to real server %s", s.RealServerAddr)
-
-	err = protoServerConn.SendPacket(packet)
-	if err != nil {
-		protoServerConn.Close() // Clean up connection on failure
-		return nil, fmt.Errorf("failed to send login packet to real server: %w", err)
-	}
-
-	log.Println("Login: Sent re-encrypted login packet to real server.")
-	return protoServerConn, nil
-}
-
 func (s *Server) receiveLoginResultMessage(pr *protocol.PacketReader) (*packets.LoginResultMessage, error) {
 	message := packets.LoginResultMessage{}
 	for pr.Remaining() > 0 {
