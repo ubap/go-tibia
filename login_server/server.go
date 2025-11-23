@@ -87,6 +87,7 @@ func (s *Server) handleConnection(clientConn net.Conn) {
 	}
 
 	s.injectMotd(loginResultMessage)
+	s.injectProxyGameworldIP(loginResultMessage)
 
 	err = protoClientConn.SendPacket(loginResultMessage)
 	if err != nil {
@@ -110,5 +111,20 @@ func (s *Server) injectMotd(message *login.LoginResultMessage) {
 	message.Motd = &login.Motd{
 		MotdId:  strconv.Itoa(int(time.Now().Unix())),
 		Message: "Welcome to the go-tibia!\nImprove your go coding skills!",
+	}
+}
+
+func (s *Server) injectProxyGameworldIP(message *login.LoginResultMessage) {
+	for _, c := range message.CharacterList.Characters {
+
+		// TODO: Extract configuration - do not hardcode
+		ip, err := protocol.StringToIP("192.168.1.140")
+		if err != nil {
+			panic("StringToIP failed")
+		}
+
+		c.WorldIp = ip
+		c.WorldPort = 7172
+		c.WorldName = "Proxy"
 	}
 }
