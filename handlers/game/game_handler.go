@@ -1,6 +1,7 @@
 package game
 
 import (
+	"fmt"
 	"goTibia/packets/game"
 	"goTibia/protocol"
 	"goTibia/proxy"
@@ -21,19 +22,67 @@ func (h *GameHandler) Handle(client *protocol.Connection) {
 		h.TargetAddr,
 		game.ParseLoginRequest,
 	)
+	if err != nil {
+		log.Printf("Game: Failed to initialize session for %s: %v", client.RemoteAddr(), err)
+		return
+	}
 	defer protoServerConn.Close()
 
-	message, err := protoServerConn.ReadMessage()
-	if err != nil {
-		log.Printf("Game: Failed to read server response for %s: %v", client.RemoteAddr(), err)
-		return
-	}
+	//message, err := protoServerConn.ReadMessage()
+	//if err != nil {
+	//	log.Printf("Game: Failed to read server response for %s: %v", client.RemoteAddr(), err)
+	//	return
+	//}
 
-	loginResult, err := game.ParseLoginResultMessage(message)
-	if err != nil {
-		log.Printf("Game: Failed to receive login result message for %s: %v", client.RemoteAddr(), err)
-		return
-	}
+	//loginResult, err := game.ParseLoginResultMessage(message)
+	//if err != nil {
+	//	log.Printf("Game: Failed to receive login result message for %s: %v", client.RemoteAddr(), err)
+	//	return
+	//}
+	//
+	//log.Printf("Game: PlayerId: %d", loginResult.PlayerId)
 
-	log.Printf("Game: PlayerId: %d", loginResult.PlayerId)
+	// 4. Start the Bidirectional Pipe
+	// We use a channel to detect when either side disconnects.
+	// If one side dies, we unblock and the function exits (triggering defers).
+	errChan := make(chan error, 2)
+
+	// Loop A: Server -> Client
+	go h.pipe(protoServerConn, client, "S2C", errChan)
+
+	// Loop B: Client -> Server
+	go h.pipe(client, protoServerConn, "C2S", errChan)
+
+	// Wait for the first error (disconnect)
+	disconnectErr := <-errChan
+	log.Printf("[Game] Connection closed: %v", disconnectErr)
+}
+
+// pipe moves data from src to dst indefinitely.
+func (h *GameHandler) pipe(src, dst *protocol.Connection, tag string, errChan chan<- error) {
+	for {
+		// 1. Read Raw Encrypted Message
+		msg, err := src.ReadMessage()
+		if err != nil {
+			errChan <- fmt.Errorf("%s Read Error: %w", tag, err)
+			return
+		}
+
+		/*
+			// --- OPTIONAL: INSPECTION POINT ---
+			// If you want to log/modify packets, do it here.
+			// Example:
+			reader := protocol.NewPacketReader(msg)
+			opcode := reader.ReadByte()
+			if tag == "C2S" && opcode == game.OpcodeSay {
+				log.Println("Player is talking...")
+			}
+		*/
+
+		// 2. Forward to Destination
+		if err := dst.WriteMessage(msg.ReadAll()); err != nil {
+			errChan <- fmt.Errorf("%s Write Error: %w", tag, err)
+			return
+		}
+	}
 }
