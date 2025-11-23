@@ -39,6 +39,15 @@ type MagicEffect struct {
 	Type byte
 }
 
+type RemoveTileCreatureMsg struct {
+	CreatureID uint32
+}
+
+type RemoveTileThingMsg struct {
+	Pos      types.Position
+	StackPos uint8
+}
+
 func ParseLoginResultMessage(pr *protocol.PacketReader) (*LoginResponse, error) {
 	lr := &LoginResponse{}
 
@@ -105,4 +114,31 @@ func ParseMagicEffect(pr *protocol.PacketReader) (*MagicEffect, error) {
 	me.Pos = readPosition(pr)
 	me.Type = pr.ReadByte()
 	return me, nil
+}
+
+func ParseRemoveTileThing(pr *protocol.PacketReader) (S2CPacket, error) {
+	// 1. Peek
+	peekVal, err := pr.PeekUint16()
+	if err != nil {
+		return nil, err
+	}
+
+	// 2. Branch
+	if peekVal == 0xFFFF {
+		// --- Return Struct A ---
+		_ = pr.ReadUint16() // Consume marker
+
+		return &RemoveTileCreatureMsg{
+			CreatureID: pr.ReadUint32(),
+		}, nil
+	}
+
+	// --- Return Struct B ---
+	msg := &RemoveTileThingMsg{}
+	msg.Pos.X = pr.ReadUint16()
+	msg.Pos.Y = pr.ReadUint16()
+	msg.Pos.Z = pr.ReadByte()
+	msg.StackPos = pr.ReadByte()
+
+	return msg, nil
 }

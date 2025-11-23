@@ -8,4 +8,5 @@ const (
 	S2CPlayerStats     uint8 = 0xA0
 	S2CPing            uint8 = 0x1E
 	S2CMagicEffect     uint8 = 0x83
+	S2CRemoveTileThing uint8 = 0x6C
 )

@@ -31,6 +31,8 @@ func ParseS2CPacket(opcode uint8, pr *protocol.PacketReader) (S2CPacket, error) 
 		return nil, ErrUnknownOpcode
 	case S2CMagicEffect:
 		return ParseMagicEffect(pr)
+	case S2CRemoveTileThing:
+		return ParseRemoveTileThing(pr)
 
 	default:
 		return nil, ErrUnknownOpcode

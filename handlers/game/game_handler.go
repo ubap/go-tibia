@@ -112,5 +112,10 @@ func (h *GameHandler) processPacketFromServer(packet game.S2CPacket) {
 		//log.Printf("[Game] MoveCreatureMsg %v", p)
 	case *game.MagicEffect:
 		log.Printf("[Game] MagicEffect %v", p)
+	case *game.RemoveTileThingMsg:
+		log.Printf("[Game] RemoveTileThingMsg %v", p)
+	case game.RemoveTileCreatureMsg:
+		log.Printf("[Game] RemoveTileCreatureMsg %v", p)
+
 	}
 }
