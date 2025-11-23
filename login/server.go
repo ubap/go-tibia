@@ -2,7 +2,7 @@ package login
 
 import (
 	"fmt"
-	"goTibia/packets"
+	"goTibia/packets/login"
 	"goTibia/protocol"
 	"log"
 	"net"
@@ -51,7 +51,7 @@ func (s *Server) handleConnection(clientConn net.Conn) {
 		return
 	}
 
-	loginPacket, err := packets.ParseCredentialsPacket(packetReader)
+	loginPacket, err := login.ParseCredentialsPacket(packetReader)
 	if err != nil {
 		log.Printf("Login: Failed to parse login packet: %v", err)
 		return
@@ -80,7 +80,7 @@ func (s *Server) handleConnection(clientConn net.Conn) {
 		return
 	}
 
-	loginResultMessage, err := packets.ParseLoginResultMessage(message)
+	loginResultMessage, err := login.ParseLoginResultMessage(message)
 	if err != nil {
 		log.Printf("Login: Failed to receive login result message for %s: %v", protoClientConn.RemoteAddr(), err)
 		return
@@ -106,8 +106,8 @@ func (s *Server) connectToServer() (*protocol.Connection, error) {
 	return protocol.NewConnection(conn), nil
 }
 
-func (s *Server) injectMotd(message *packets.LoginResultMessage) {
-	message.Motd = &packets.Motd{
+func (s *Server) injectMotd(message *login.LoginResultMessage) {
+	message.Motd = &login.Motd{
 		MotdId:  strconv.Itoa(int(time.Now().Unix())),
 		Message: "Welcome to the go-tibia!\nImprove your go coding skills!",
 	}
