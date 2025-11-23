@@ -2,6 +2,7 @@ package game
 
 import (
 	"goTibia/protocol"
+	"goTibia/types"
 )
 
 type LoginResponse struct {
@@ -9,6 +10,10 @@ type LoginResponse struct {
 	PlayerId           uint32
 	BeatDuration       uint16
 	CanReportBugs      bool
+}
+
+type MapDescription struct {
+	Pos types.Position
 }
 
 func ParseLoginResultMessage(pr *protocol.PacketReader) (*LoginResponse, error) {
@@ -19,4 +24,12 @@ func ParseLoginResultMessage(pr *protocol.PacketReader) (*LoginResponse, error) 
 	lr.CanReportBugs = pr.ReadBool()
 
 	return lr, pr.Err()
+}
+
+func ParseMapDescription(pr *protocol.PacketReader) (*MapDescription, error) {
+	return &MapDescription{Pos: readPosition(pr)}, ErrNotFullyImplemented
+}
+
+func ParsePlayerStats(pr *protocol.PacketReader) (*MapDescription, error) {
+	return nil, ErrUnknownOpcode
 }

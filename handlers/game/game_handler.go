@@ -1,6 +1,7 @@
 package game
 
 import (
+	"errors"
 	"fmt"
 	"goTibia/game/state"
 	"goTibia/packets/game"
@@ -89,14 +90,23 @@ func (h *GameHandler) processPacketsFromServer(packetReader *protocol.PacketRead
 	for packetReader.Remaining() > 0 {
 		opcode := packetReader.ReadByte()
 		packet, err := game.ParseS2CPacket(opcode, packetReader)
+		if errors.Is(err, game.ErrNotFullyImplemented) {
+			h.processPacketFromServer(packet)
+		}
 		if err != nil {
-			log.Printf("[Game] Failed to parse game packet (opcode: 0x%X): %v", opcode, err)
+			// log.Printf("[Game] Failed to parse game packet (opcode: 0x%X): %v", opcode, err)
 			break
 		}
-		switch p := packet.(type) {
-		case game.LoginResponse:
-			log.Printf("[Game] Received game message: %d", p.PlayerId)
-			h.State.SetPlayerId(p.PlayerId)
-		}
+		h.processPacketFromServer(packet)
+	}
+}
+
+func (h *GameHandler) processPacketFromServer(packet game.S2CPacket) {
+	switch p := packet.(type) {
+	case *game.LoginResponse:
+		log.Printf("[Game] Received game message: %d", p.PlayerId)
+		h.State.SetPlayerId(p.PlayerId)
+	case *game.MapDescription:
+		h.State.SetPosition(p.Pos)
 	}
 }
