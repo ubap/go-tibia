@@ -73,3 +73,32 @@ func TestParseLoginPacket_GoldenSample(t *testing.T) {
 	}
 	require.Equal(t, expected, *packet)
 }
+
+func TestParseCredentials_WrongRSAKey(t *testing.T) {
+	// The default config is that, we encode using GameServerPublicKey, and decode using ClientPrivateKey.
+	// Client key does not match GameServer key, so decryption should fail.
+
+	// Encode a valid packet
+	packet := packets.ClientCredentialPacket{
+		Protocol:      1,
+		ClientOS:      65535,
+		ClientVersion: 1234,
+		DatSignature:  7,
+		SprSignature:  8,
+		PicSignature:  9,
+		XTEAKey:       [4]uint32{17, 18, 19, 20},
+		AccountNumber: 42,
+		Password:      "secret",
+	}
+	pw := protocol.NewPacketWriter()
+	packet.Encode(pw)
+	validBytes, _ := pw.GetBytes()
+
+	// Attempt to parse
+	reader := protocol.NewPacketReader(validBytes)
+	_, err := packets.ParseCredentialsPacket(reader)
+
+	// Assert failure
+	require.Error(t, err, "Should fail when RSA keys do not match")
+	require.Contains(t, err.Error(), "invalid checkByte")
+}
