@@ -21,17 +21,39 @@ func (h *GameHandler) Handle(client *protocol.Connection) {
 		return
 	}
 
-	_, err = game.ParseLoginRequest(packetReader)
+	loginRequest, err := game.ParseLoginRequest(packetReader)
 	if err != nil {
-		log.Printf("Login: Failed to parse login packet: %v", err)
+		log.Printf("Game: Failed to parse login packet: %v", err)
 		return
 	}
 
 	protoServerConn, err := proxy.ConnectToBackend(h.TargetAddr)
 	if err != nil {
-		log.Printf("Login: Failed to connect to %s: %v", client.RemoteAddr(), err)
+		log.Printf("Game: Failed to connect to %s: %v", client.RemoteAddr(), err)
 		return
 	}
 	defer protoServerConn.Close()
+
+	if err := protoServerConn.SendPacket(loginRequest); err != nil {
+		log.Printf("Game: Failed to forward credentials to backend: %v", err)
+		return
+	}
+
+	log.Println("Game: LoginRequest forwarded to backend.")
+
+	protoServerConn.EnableXTEA(loginRequest.XTEAKey)
+	client.EnableXTEA(loginRequest.XTEAKey)
+
+	message, err := protoServerConn.ReadMessage()
+	if err != nil {
+		log.Printf("Game: Failed to read server response for %s: %v", client.RemoteAddr(), err)
+		return
+	}
+
+	_, err = game.ParseLoginResultMessage(message)
+	if err != nil {
+		log.Printf("Game: Failed to receive login result message for %s: %v", client.RemoteAddr(), err)
+		return
+	}
 
 }

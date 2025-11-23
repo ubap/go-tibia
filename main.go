@@ -18,7 +18,7 @@ func main() {
 	}
 
 	gameHandler := &game.GameHandler{
-		TargetAddr: "world.fibula.app:7171",
+		TargetAddr: "world.fibula.app:7172",
 	}
 
 	go func() {

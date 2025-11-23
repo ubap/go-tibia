@@ -69,6 +69,17 @@ func (pw *PacketWriter) WriteBytes(data []byte) {
 	}
 }
 
+func (pw *PacketWriter) WriteBool(data bool) {
+	if pw.err != nil {
+		return
+	}
+	if data {
+		pw.err = pw.buff.WriteByte(1)
+	} else {
+		pw.err = pw.buff.WriteByte(0)
+	}
+}
+
 func (pw *PacketWriter) GetBytes() ([]byte, error) {
 	if pw.err != nil {
 		return nil, pw.err
