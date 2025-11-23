@@ -23,6 +23,12 @@ func (lp *LoginResultMessage) Encode(pw *protocol.PacketWriter) {
 		pw.WriteString(lp.ClientDisconnectedReason)
 	}
 
+	if lp.Motd != nil {
+		pw.WriteByte(S2COpcodeMOTD)
+		motdData := fmt.Sprintf("%s\n%s", lp.Motd.MotdId, lp.Motd.Message)
+		pw.WriteString(motdData)
+	}
+
 	if lp.CharacterList != nil {
 		pw.WriteByte(S2COpcodeCharacterList)
 		WriteCharacterList(pw, lp.CharacterList)

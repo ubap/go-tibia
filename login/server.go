@@ -6,6 +6,7 @@ import (
 	"goTibia/protocol"
 	"log"
 	"net"
+	"strconv"
 	"time"
 )
 
@@ -79,13 +80,15 @@ func (s *Server) handleConnection(clientConn net.Conn) {
 		return
 	}
 
-	resultMessage, err := packets.ParseLoginResultMessage(message)
+	loginResultMessage, err := packets.ParseLoginResultMessage(message)
 	if err != nil {
 		log.Printf("Login: Failed to receive login result message for %s: %v", protoClientConn.RemoteAddr(), err)
 		return
 	}
 
-	err = protoClientConn.SendPacket(resultMessage)
+	s.injectMotd(loginResultMessage)
+
+	err = protoClientConn.SendPacket(loginResultMessage)
 	if err != nil {
 		log.Printf("Login: Failed to send login result message for %s: %v", protoClientConn.RemoteAddr(), err)
 		return
@@ -101,4 +104,11 @@ func (s *Server) connectToServer() (*protocol.Connection, error) {
 	}
 
 	return protocol.NewConnection(conn), nil
+}
+
+func (s *Server) injectMotd(message *packets.LoginResultMessage) {
+	message.Motd = &packets.Motd{
+		MotdId:  strconv.Itoa(int(time.Now().Unix())),
+		Message: "Welcome to the go-tibia!\nImprove your go coding skills!",
+	}
 }
