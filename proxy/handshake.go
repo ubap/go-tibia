@@ -22,13 +22,13 @@ func InitSession[T XTEAPacket](
 	var empty T // Zero value for error returns
 
 	// 1. Read Initial Message
-	msg, err := client.ReadMessage()
+	_, packetReader, err := client.ReadMessage()
 	if err != nil {
 		return empty, nil, fmt.Errorf("read initial message: %w", err)
 	}
 
 	// 2. Parse (using the specific parser provided)
-	packet, err := parser(msg)
+	packet, err := parser(packetReader)
 	if err != nil {
 		return empty, nil, fmt.Errorf("parse initial packet: %w", err)
 	}

@@ -62,25 +62,19 @@ func (h *GameHandler) Handle(client *protocol.Connection) {
 func (h *GameHandler) pipe(src, dst *protocol.Connection, tag string, errChan chan<- error) {
 	for {
 		// 1. Read Raw Encrypted Message
-		msg, err := src.ReadMessage()
+		rawMsg, _, err := src.ReadMessage()
 		if err != nil {
 			errChan <- fmt.Errorf("%s Read Error: %w", tag, err)
 			return
 		}
 
-		/*
-			// --- OPTIONAL: INSPECTION POINT ---
-			// If you want to log/modify packets, do it here.
-			// Example:
-			reader := protocol.NewPacketReader(msg)
-			opcode := reader.ReadByte()
-			if tag == "C2S" && opcode == game.OpcodeSay {
-				log.Println("Player is talking...")
-			}
-		*/
-
+		//opcode := packetReader.ReadByte()
+		//packet, err := game.ParseClientPacket(opcode, packetReader)
+		//if err != nil {
+		//
+		//}
 		// 2. Forward to Destination
-		if err := dst.WriteMessage(msg.ReadAll()); err != nil {
+		if err := dst.WriteMessage(rawMsg); err != nil {
 			errChan <- fmt.Errorf("%s Write Error: %w", tag, err)
 			return
 		}

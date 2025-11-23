@@ -26,13 +26,13 @@ func (h *LoginHandler) Handle(protoClientConn *protocol.Connection) {
 	)
 	defer protoServerConn.Close()
 
-	message, err := protoServerConn.ReadMessage()
+	_, packetReader, err := protoServerConn.ReadMessage()
 	if err != nil {
 		log.Printf("Login: Failed to read server response for %s: %v", protoClientConn.RemoteAddr(), err)
 		return
 	}
 
-	loginResultMessage, err := loginpkt.ParseLoginResultMessage(message)
+	loginResultMessage, err := loginpkt.ParseLoginResultMessage(packetReader)
 	if err != nil {
 		log.Printf("Login: Failed to receive login result message for %s: %v", protoClientConn.RemoteAddr(), err)
 		return
