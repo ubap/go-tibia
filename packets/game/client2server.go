@@ -77,3 +77,7 @@ func ParseLoginRequest(packetReader *protocol.PacketReader) (*LoginRequest, erro
 
 	return packet, packetReader.Err()
 }
+
+func (lr *LoginRequest) GetXTEAKey() [4]uint32 {
+	return lr.XTEAKey
+}

@@ -15,60 +15,39 @@ type LoginHandler struct {
 	// You could add "DB *sql.DB" here later!
 }
 
-func (h *LoginHandler) Handle(client *protocol.Connection) {
-	log.Printf("[Login] New Connection: %s", client.RemoteAddr())
+func (h *LoginHandler) Handle(protoClientConn *protocol.Connection) {
+	log.Printf("[Login] New Connection: %s", protoClientConn.RemoteAddr())
 
-	packetReader, err := client.ReadMessage()
-	if err != nil {
-		log.Printf("error reading message from %s: %v", client.RemoteAddr(), err)
-		return
-	}
-
-	loginPacket, err := loginpkt.ParseCredentialsPacket(packetReader)
-	if err != nil {
-		log.Printf("Login: Failed to parse login packet: %v", err)
-		return
-	}
-
-	protoServerConn, err := proxy.ConnectToBackend(h.TargetAddr)
-	if err != nil {
-		log.Printf("Login: Failed to connect to %s: %v", client.RemoteAddr(), err)
-		return
-	}
+	_, protoServerConn, err := proxy.InitSession(
+		"Login",
+		protoClientConn,
+		h.TargetAddr,
+		loginpkt.ParseCredentialsPacket,
+	)
 	defer protoServerConn.Close()
-
-	if err := protoServerConn.SendPacket(loginPacket); err != nil {
-		log.Printf("Login: Failed to forward credentials to backend: %v", err)
-		return
-	}
-
-	log.Println("Login: Credentials forwarded to backend.")
-
-	protoServerConn.EnableXTEA(loginPacket.XTEAKey)
-	client.EnableXTEA(loginPacket.XTEAKey)
 
 	message, err := protoServerConn.ReadMessage()
 	if err != nil {
-		log.Printf("Login: Failed to read server response for %s: %v", client.RemoteAddr(), err)
+		log.Printf("Login: Failed to read server response for %s: %v", protoClientConn.RemoteAddr(), err)
 		return
 	}
 
 	loginResultMessage, err := loginpkt.ParseLoginResultMessage(message)
 	if err != nil {
-		log.Printf("Login: Failed to receive login result message for %s: %v", client.RemoteAddr(), err)
+		log.Printf("Login: Failed to receive login result message for %s: %v", protoClientConn.RemoteAddr(), err)
 		return
 	}
 
 	injectMotd(loginResultMessage, h.ProxyMOTD)
 	injectProxyGameworldIP(loginResultMessage)
 
-	err = client.SendPacket(loginResultMessage)
+	err = protoClientConn.SendPacket(loginResultMessage)
 	if err != nil {
-		log.Printf("Login: Failed to send login result message for %s: %v", client.RemoteAddr(), err)
+		log.Printf("Login: Failed to send login result message for %s: %v", protoClientConn.RemoteAddr(), err)
 		return
 	}
 
-	log.Printf("Login: Connection for %s finished.", client.RemoteAddr())
+	log.Printf("Login: Connection for %s finished.", protoClientConn.RemoteAddr())
 }
 
 func injectMotd(message *loginpkt.LoginResultMessage, motd string) {

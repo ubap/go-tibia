@@ -79,3 +79,7 @@ func ParseCredentialsPacket(packetReader *protocol.PacketReader) (*ClientCredent
 
 	return packet, packetReader.Err()
 }
+
+func (p *ClientCredentialPacket) GetXTEAKey() [4]uint32 {
+	return p.XTEAKey
+}

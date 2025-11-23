@@ -15,34 +15,13 @@ type GameHandler struct {
 func (h *GameHandler) Handle(client *protocol.Connection) {
 	log.Printf("[Game] New Connection: %s", client.RemoteAddr())
 
-	packetReader, err := client.ReadMessage()
-	if err != nil {
-		log.Printf("Game: error reading message from %s: %v", client.RemoteAddr(), err)
-		return
-	}
-
-	loginRequest, err := game.ParseLoginRequest(packetReader)
-	if err != nil {
-		log.Printf("Game: Failed to parse login packet: %v", err)
-		return
-	}
-
-	protoServerConn, err := proxy.ConnectToBackend(h.TargetAddr)
-	if err != nil {
-		log.Printf("Game: Failed to connect to %s: %v", client.RemoteAddr(), err)
-		return
-	}
+	_, protoServerConn, err := proxy.InitSession(
+		"Game",
+		client,
+		h.TargetAddr,
+		game.ParseLoginRequest,
+	)
 	defer protoServerConn.Close()
-
-	if err := protoServerConn.SendPacket(loginRequest); err != nil {
-		log.Printf("Game: Failed to forward credentials to backend: %v", err)
-		return
-	}
-
-	log.Println("Game: LoginRequest forwarded to backend.")
-
-	protoServerConn.EnableXTEA(loginRequest.XTEAKey)
-	client.EnableXTEA(loginRequest.XTEAKey)
 
 	message, err := protoServerConn.ReadMessage()
 	if err != nil {
