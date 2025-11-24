@@ -11,6 +11,10 @@ const (
 	S2CLoginAsAdmin    uint8 = 0x0B
 	S2CPing            uint8 = 0x1E
 	S2CMapDescription  uint8 = 0x64
+	S2CMapSliceNorth   uint8 = 0x65
+	S2CMapSliceEast    uint8 = 0x66
+	S2CMapSliceSouth   uint8 = 0x67
+	S2CMapSliceWest    uint8 = 0x68
 	S2CRemoveTileThing uint8 = 0x6C
 	S2CMoveCreature    uint8 = 0x6D
 	S2CWorldLight      uint8 = 0x82
