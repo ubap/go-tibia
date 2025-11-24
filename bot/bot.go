@@ -13,9 +13,8 @@ type Bot struct {
 	// Data Source (Read-Only mostly)
 	State *state.GameState
 
-	// Output Channels
-	ServerConn *protocol.Connection // To send commands (Walk, Attack)
-	ClientConn *protocol.Connection // To send feedback (Text overlay)
+	ServerConn *protocol.Connection
+	ClientConn *protocol.Connection
 
 	// Lifecycle management
 	stopChan chan struct{}
@@ -39,8 +38,6 @@ func (b *Bot) Start() {
 	// 1. The Light Hack (For testing S2C injection)
 	b.runModule("LightHack", b.loopLightHack)
 
-	// 2. Auto Healer (For testing C2S injection - logic from previous steps)
-	// b.runModule("AutoHealer", b.loopAutoHealer)
 }
 
 func (b *Bot) Stop() {
@@ -49,7 +46,6 @@ func (b *Bot) Stop() {
 	log.Println("[Bot] Engine stopped")
 }
 
-// Helper to run a loop safely
 func (b *Bot) runModule(name string, logic func()) {
 	b.wg.Add(1)
 	go func() {
@@ -61,8 +57,8 @@ func (b *Bot) runModule(name string, logic func()) {
 }
 
 // loopLightHack sends a World Light packet every 100ms.
+// Better way would be to intercept the character light change and change it.
 func (b *Bot) loopLightHack() {
-	// 1. Setup Ticker (100ms)
 	ticker := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()
 
