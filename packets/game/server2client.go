@@ -64,6 +64,10 @@ type CreatureHealthMsg struct {
 	Hppc       uint8
 }
 
+type PlayerIconsMsg struct {
+	Icons uint8
+}
+
 func ParseLoginResultMessage(pr *protocol.PacketReader) (*LoginResponse, error) {
 	lr := &LoginResponse{}
 
@@ -195,4 +199,11 @@ func (cr *CreatureLightMsg) Encode(pw *protocol.PacketWriter) {
 	pw.WriteUint32(cr.CreatureID)
 	pw.WriteByte(cr.LightLevel)
 	pw.WriteByte(cr.Color)
+}
+
+func ParsePlayerIcons(pr *protocol.PacketReader) (*PlayerIconsMsg, error) {
+	pi := &PlayerIconsMsg{}
+	pi.Icons = pr.ReadByte()
+
+	return pi, nil
 }

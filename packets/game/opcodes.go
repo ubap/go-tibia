@@ -18,4 +18,5 @@ const (
 	S2CCreatureHealth  uint8 = 0x8C
 	S2CCreatureLight   uint8 = 0x8D
 	S2CPlayerStats     uint8 = 0xA0
+	S2CPlayerIcons     uint8 = 0xA2
 )

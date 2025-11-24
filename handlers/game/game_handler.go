@@ -111,6 +111,8 @@ func (h *GameHandler) processPacketFromServer(packet game.S2CPacket) {
 		log.Printf("[Game] CreatureLightMsg %v", p)
 	case *game.CreatureHealthMsg:
 		log.Printf("[Game] CreatureHealthMsg %v", p)
+	case *game.PlayerIconsMsg:
+		log.Printf("[Game] PlayerIconsMsg %v", p)
 
 	}
 }
