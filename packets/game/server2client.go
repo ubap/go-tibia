@@ -54,6 +54,11 @@ type CreatureLightMsg struct {
 	Color      uint8
 }
 
+type WorldLightMsg struct {
+	LightLevel uint8
+	Color      uint8
+}
+
 type CreatureHealthMsg struct {
 	CreatureID uint32
 	Hppc       uint8
@@ -163,10 +168,31 @@ func ParseCreatureLight(pr *protocol.PacketReader) (*CreatureLightMsg, error) {
 	return cl, nil
 }
 
+func ParseWorldLight(pr *protocol.PacketReader) (*WorldLightMsg, error) {
+	cl := &WorldLightMsg{}
+	cl.LightLevel = pr.ReadByte()
+	cl.Color = pr.ReadByte()
+
+	return cl, nil
+}
+
 func ParseCreatureHealth(pr *protocol.PacketReader) (*CreatureHealthMsg, error) {
 	cl := &CreatureHealthMsg{}
 	cl.CreatureID = pr.ReadUint32()
 	cl.Hppc = pr.ReadByte()
 
 	return cl, nil
+}
+
+func (lr *WorldLightMsg) Encode(pw *protocol.PacketWriter) {
+	pw.WriteByte(S2CWorldLight)
+	pw.WriteByte(lr.LightLevel)
+	pw.WriteByte(lr.Color)
+}
+
+func (cr *CreatureLightMsg) Encode(pw *protocol.PacketWriter) {
+	pw.WriteByte(S2CCreatureLight)
+	pw.WriteUint32(cr.CreatureID)
+	pw.WriteByte(cr.LightLevel)
+	pw.WriteByte(cr.Color)
 }

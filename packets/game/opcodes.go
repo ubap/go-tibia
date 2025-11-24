@@ -13,6 +13,7 @@ const (
 	S2CMapDescription  uint8 = 0x64
 	S2CRemoveTileThing uint8 = 0x6C
 	S2CMoveCreature    uint8 = 0x6D
+	S2CWorldLight      uint8 = 0x82
 	S2CMagicEffect     uint8 = 0x83
 	S2CCreatureHealth  uint8 = 0x8C
 	S2CCreatureLight   uint8 = 0x8D

@@ -3,6 +3,7 @@ package game
 import (
 	"errors"
 	"fmt"
+	"goTibia/bot"
 	"goTibia/game/state"
 	"goTibia/packets/game"
 	"goTibia/protocol"
@@ -14,6 +15,7 @@ type GameHandler struct {
 	TargetAddr string
 	State      *state.GameState
 	// You could add "DB *sql.DB" here later!
+	Bot bot.Bot
 }
 
 func (h *GameHandler) Handle(client *protocol.Connection) {
@@ -33,20 +35,6 @@ func (h *GameHandler) Handle(client *protocol.Connection) {
 	}
 	defer protoServerConn.Close()
 
-	//message, err := protoServerConn.ReadMessage()
-	//if err != nil {
-	//	log.Printf("Game: Failed to read server response for %s: %v", client.RemoteAddr(), err)
-	//	return
-	//}
-
-	//loginResult, err := game.ParseLoginResultMessage(message)
-	//if err != nil {
-	//	log.Printf("Game: Failed to receive login result message for %s: %v", client.RemoteAddr(), err)
-	//	return
-	//}
-	//
-	//log.Printf("Game: PlayerId: %d", loginResult.PlayerId)
-
 	// 4. Start the Bidirectional Pipe
 	// We use a channel to detect when either side disconnects.
 	// If one side dies, we unblock and the function exits (triggering defers).
@@ -57,6 +45,9 @@ func (h *GameHandler) Handle(client *protocol.Connection) {
 
 	// Loop B: Client -> Server
 	go h.pipe(client, protoServerConn, "C2S", errChan)
+
+	h.Bot = *bot.New(h.State, protoServerConn, client)
+	h.Bot.Start()
 
 	// Wait for the first error (disconnect)
 	disconnectErr := <-errChan
