@@ -2,8 +2,11 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
+	"path/filepath"
+	"strings"
 )
 
 // Addresses in file (Not in memory)
@@ -16,8 +19,8 @@ const (
 )
 
 func main() {
-	inputFile := flag.String("binary", "Tibia.exe", "The binary to patch (default: Tibia.exe)")
-	ip := flag.String("ip", "127.0.0.1", "New login servers IP address (default: 127.0.0.1)")
+	inputFile := flag.String("binary", "Tibia.exe", "Path to the Tibia binary")
+	ip := flag.String("ip", "127.0.0.1", "Proxy IP address")
 
 	flag.Parse()
 
@@ -27,18 +30,32 @@ func main() {
 
 	content, err := os.ReadFile(*inputFile)
 	if err != nil {
-		log.Fatalf("Error reading input file '%s': %v", *inputFile, err)
+		log.Fatalf("Error reading '%s': %v", *inputFile, err)
 	}
 
+	// 2. Patch
 	content = changeLoginServers(content, *ip)
 	content = changeRSAKey(content)
 
-	err = os.WriteFile("Tibia_patched.exe", content, 0755)
+	// 3. Determine Output Path
+	// If input is "C:/Games/Tibia/Tibia.exe", output is "C:/Games/Tibia/Tibia_patched.exe"
+	// This ensures the patched exe can find Tibia.spr/dat in that same folder.
+	dir := filepath.Dir(*inputFile)
+	filename := filepath.Base(*inputFile)
+	ext := filepath.Ext(filename)
+	rawName := strings.TrimSuffix(filename, ext)
+
+	outputName := fmt.Sprintf("%s_patched%s", rawName, ext)
+	outputPath := filepath.Join(dir, outputName)
+
+	// 4. Write Output
+	// 0755 makes it executable on Linux/Mac (if running via Wine)
+	err = os.WriteFile(outputPath, content, 0755)
 	if err != nil {
-		log.Fatalf("Error writing output file '%s': %v", *inputFile, err)
+		log.Fatalf("Error writing '%s': %v", outputPath, err)
 	}
 
-	log.Println("Successfully wrote output to Tibia_patched.exe")
+	log.Printf("Success! Created patched client at: %s", outputPath)
 }
 
 func changeLoginServers(content []byte, newIp string) []byte {
