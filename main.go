@@ -20,6 +20,7 @@
 package main
 
 import (
+	"goTibia/dat"
 	"goTibia/handlers/game"
 	"goTibia/handlers/login"
 	"goTibia/proxy"
@@ -28,6 +29,10 @@ import (
 )
 
 func main() {
+	if err := dat.LoadItemsJson("data/772/items.json"); err != nil {
+		log.Fatalf("Critical Error: %v", err)
+	}
+
 	var wg sync.WaitGroup
 	wg.Add(2)
 
