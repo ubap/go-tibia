@@ -21,7 +21,9 @@ func ParseS2CPacket(opcode uint8, pr *protocol.PacketReader) (S2CPacket, error) 
 	case S2CLoginSuccessful:
 		return ParseLoginResultMessage(pr)
 	case S2CMapDescription:
-		return ParseMapDescription(pr)
+		//return ParseMapDescription(pr)
+		log.Println("parse map description - not implemented")
+		return nil, ErrUnknownOpcode
 	case S2CMoveCreature:
 		return ParseMoveCreature(pr)
 	case S2CPing:
@@ -41,6 +43,8 @@ func ParseS2CPacket(opcode uint8, pr *protocol.PacketReader) (S2CPacket, error) 
 		return ParseCreatureHealth(pr)
 	case S2CPlayerIcons:
 		return ParsePlayerIcons(pr)
+	case S2CServerClosed:
+		return ParseServerClosedMsg(pr)
 
 	default:
 		return nil, ErrUnknownOpcode

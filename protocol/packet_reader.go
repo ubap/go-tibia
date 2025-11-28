@@ -140,22 +140,53 @@ func (pr *PacketReader) ReadAll() []byte {
 }
 
 func (pr *PacketReader) PeekUint16() (uint16, error) {
-	// bytes.Reader doesn't support Peek natively nicely,
-	// but we can ReadAt without advancing.
-	// OR, more simply, Read and then Unread/Seek back.
-
-	if pr.reader.Len() < 2 {
-		return 0, io.EOF
+	// 1. Snapshot position
+	currentPos, err := pr.reader.Seek(0, io.SeekCurrent)
+	if err != nil {
+		return 0, err
 	}
 
-	// Read 2 bytes
+	// 2. Read forward
 	var b [2]byte
-	_, err := pr.reader.ReadAt(b[:], 0) // ReadAt does not advance cursor
+	_, err = pr.reader.Read(b[:])
+	if err != nil {
+		return 0, err
+	}
+
+	// 3. Rewind back
+	_, err = pr.reader.Seek(currentPos, 0) // 0 = io.SeekStart
 	if err != nil {
 		return 0, err
 	}
 
 	return binary.LittleEndian.Uint16(b[:]), nil
+}
+
+func (pr *PacketReader) PeekBytes(n int) ([]byte, error) {
+	// 1. Save current position
+	// 1 = io.SeekCurrent
+	currentPos, err := pr.reader.Seek(0, 1)
+	if err != nil {
+		return nil, err
+	}
+
+	// 2. Read the bytes
+	buf := make([]byte, n)
+	readBytes, err := pr.reader.Read(buf)
+	// Ignore EOF here, we just want to see what's available
+	if err != nil && readBytes == 0 {
+		return nil, err
+	}
+
+	// 3. Rewind to original position
+	// 0 = io.SeekStart (Absolute offset)
+	_, err = pr.reader.Seek(currentPos, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	// Return only the bytes we actually managed to read
+	return buf[:readBytes], nil
 }
 
 func (pr *PacketReader) Remaining() int {
