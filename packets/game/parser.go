@@ -21,7 +21,7 @@ func ParseS2CPacket(opcode uint8, pr *protocol.PacketReader) (S2CPacket, error) 
 	case S2CLoginSuccessful:
 		return ParseLoginResultMessage(pr)
 	case S2CMapDescription:
-		return ParseMapDescription(pr)
+		return ParseMapDescriptionMsg(pr)
 	case S2CMoveCreature:
 		return ParseMoveCreature(pr)
 	case S2CPing:
