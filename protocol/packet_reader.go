@@ -3,6 +3,7 @@ package protocol
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"io"
 )
 
@@ -158,6 +159,36 @@ func (pr *PacketReader) PeekUint16() (uint16, error) {
 	}
 
 	return binary.LittleEndian.Uint16(b[:]), nil
+}
+
+// PeekBytes returns the next n bytes without advancing the reader.
+// It returns a copy of the bytes, so modifying the result does not affect the reader.
+func (pr *PacketReader) PeekBytes(n int) ([]byte, error) {
+	// 1. Validation: Ensure enough bytes exist
+	if n < 0 {
+		return nil, errors.New("n must be greater than or equal to 0")
+	}
+	if pr.reader.Len() < n {
+		return nil, io.ErrUnexpectedEOF
+	}
+
+	// 2. Get current offset without moving cursor
+	currentPos, err := pr.reader.Seek(0, io.SeekCurrent)
+	if err != nil {
+		return nil, err
+	}
+
+	// 3. Allocate buffer
+	buf := make([]byte, n)
+
+	// 4. ReadAt reads from the specific offset and does not advance the reader
+	// bytes.Reader.ReadAt guarantees a full read or an error.
+	_, err = pr.reader.ReadAt(buf, currentPos)
+	if err != nil {
+		return nil, err
+	}
+
+	return buf, nil
 }
 
 func (pr *PacketReader) Remaining() int {
