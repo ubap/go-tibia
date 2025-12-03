@@ -22,14 +22,8 @@ type MapDescriptionMsg struct {
 
 type Tile struct {
 	Position types.Position
-	Ground   *Item // Pointer, can be nil
-	Items    []Item
-}
-
-type Item struct {
-	ID       uint16
-	Count    uint8 // Used for stack count, fluid type, or rune charges
-	HasCount bool  // Helper to know if we should write the Count byte
+	Ground   *types.Item // Pointer, can be nil
+	Items    []types.Item
 }
 
 func ParseMapDescriptionMsg(pr *protocol.PacketReader) (*MapDescriptionMsg, error) {
@@ -37,10 +31,7 @@ func ParseMapDescriptionMsg(pr *protocol.PacketReader) (*MapDescriptionMsg, erro
 		Tiles: make([]Tile, 0, MapWidth*MapHeight),
 	}
 
-	// 1. Read Player Position
-	msg.PlayerPos.X = pr.ReadUint16()
-	msg.PlayerPos.Y = pr.ReadUint16()
-	msg.PlayerPos.Z = pr.ReadByte()
+	msg.PlayerPos = readPosition(pr)
 
 	// 2. Determine Z-Range (Protocol 7.72 Logic)
 	// If on surface (z<=7), draw from 7 down to 0.
@@ -66,7 +57,7 @@ func ParseMapDescriptionMsg(pr *protocol.PacketReader) (*MapDescriptionMsg, erro
 		// Tibia shifts the view when looking at lower floors
 		offsetZ := int(msg.PlayerPos.Z) - currentZ
 
-		fmt.Printf("Floor Z=%d, Processed=%d/%d\n", currentZ, tilesProcessed, tilesPerFloor)
+		// fmt.Printf("Floor Z=%d, Processed=%d/%d\n", currentZ, tilesProcessed, tilesPerFloor)
 
 		// Peek the Token
 		// >= 0xFF00 means SKIP
@@ -81,7 +72,7 @@ func ParseMapDescriptionMsg(pr *protocol.PacketReader) (*MapDescriptionMsg, erro
 			_ = pr.ReadUint16()            // Consume the peeked value
 			skipCount := int(val&0xFF) + 1 // Lower byte is count, skip is 0 based counter
 
-			fmt.Printf("  [SKIP] Count: %d (Token: %04X) | Total Processed: %d\n", skipCount, val, tilesProcessed)
+			// fmt.Printf("  [SKIP] Count: %d (Token: %04X) | Total Processed: %d\n", skipCount, val, tilesProcessed)
 
 			tilesProcessed += skipCount
 		} else {
@@ -99,7 +90,7 @@ func ParseMapDescriptionMsg(pr *protocol.PacketReader) (*MapDescriptionMsg, erro
 				Z: uint8(currentZ),
 			}
 
-			fmt.Printf("  [TILE] Parsing %v (Ground ID: %d)...\n", tilePos, val)
+			// fmt.Printf("  [TILE] Parsing %v (Ground ID: %d)...\n", tilePos, val)
 
 			// Parse the items on this tile
 			tile := parseTile(pr, tilePos)
@@ -115,7 +106,7 @@ func ParseMapDescriptionMsg(pr *protocol.PacketReader) (*MapDescriptionMsg, erro
 			if (zStep > 0 && currentZ == endZ) || (zStep < 0 && currentZ == endZ) {
 				// We finished the last floor.
 				// Any remaining 'skip' count is irrelevant (padding).
-				fmt.Println("--- END MAP DEBUG (Success) ---")
+				// fmt.Println("--- END MAP DEBUG (Success) ---")
 
 				return msg, nil
 			}
@@ -123,7 +114,7 @@ func ParseMapDescriptionMsg(pr *protocol.PacketReader) (*MapDescriptionMsg, erro
 			// 2. Move to next floor
 			tilesProcessed -= tilesPerFloor
 			currentZ += zStep
-			fmt.Printf("--- MOVING TO FLOOR Z=%d ---\n", currentZ)
+			// fmt.Printf("--- MOVING TO FLOOR Z=%d ---\n", currentZ)
 		}
 	}
 }
@@ -132,10 +123,10 @@ func parseTile(pr *protocol.PacketReader, pos types.Position) Tile {
 	// 1. Setup the Tile struct
 	t := Tile{
 		Position: pos,
-		Items:    make([]Item, 0, 4), // Pre-allocate small cap for performance
+		Items:    make([]types.Item, 0, 4), // Pre-allocate small cap for performance
 	}
 
-	groundItem := ReadItem(pr)
+	groundItem := readItem(pr)
 	t.Ground = &groundItem
 
 	// 3. Loop: Read Items on top of the ground
@@ -148,7 +139,7 @@ func parseTile(pr *protocol.PacketReader, pos types.Position) Tile {
 		// - Error/EOF
 		// - Value is >= 0xFF00 (This is a Skip/RLE marker for the map loop)
 		if err != nil || nextVal >= 0xFF00 {
-			fmt.Println("End of Tile")
+			// fmt.Println("End of Tile")
 			break
 		}
 
@@ -162,13 +153,13 @@ func parseTile(pr *protocol.PacketReader, pos types.Position) Tile {
 
 			err := readCreatureInMap(pr)
 			if err != nil {
-				fmt.Printf("Error reading creature in map at tile %v: %v\n", pos, err)
+				// fmt.Printf("Error reading creature in map at tile %v: %v\n", pos, err)
 				return Tile{}
 			}
 			continue
 		}
 
-		item := ReadItem(pr)
+		item := readItem(pr)
 		t.Items = append(t.Items, item)
 	}
 
@@ -176,7 +167,6 @@ func parseTile(pr *protocol.PacketReader, pos types.Position) Tile {
 }
 
 func readCreatureInMap(pr *protocol.PacketReader) error {
-	fmt.Println("Reading creature in map...")
 	// 1. Read Marker (We already peeked it, but we must consume it)
 	marker := pr.ReadUint16()
 
@@ -186,8 +176,7 @@ func readCreatureInMap(pr *protocol.PacketReader) error {
 		_ = pr.ReadUint32() // ID
 
 	} else if marker == TileDataCreatureUnknown { // 0x61
-		// C++: else msg.add(remove); msg.add(id); msg.addString(name);
-		_ = pr.ReadUint32() // Remove ID (known as 'removedKnown')
+		_ = pr.ReadUint32() // The id to remove from knowns, it is there to free some slot from known creatures list.
 		_ = pr.ReadUint32() // ID
 		_ = pr.ReadString() // Name
 	} else {
