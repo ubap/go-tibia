@@ -17,18 +17,12 @@ const (
 
 type MapDescriptionMsg struct {
 	PlayerPos types.Position
-	Tiles     []Tile
-}
-
-type Tile struct {
-	Position types.Position
-	Ground   *types.Item // Pointer, can be nil
-	Items    []types.Item
+	Tiles     []types.Tile
 }
 
 func ParseMapDescriptionMsg(pr *protocol.PacketReader) (*MapDescriptionMsg, error) {
 	msg := &MapDescriptionMsg{
-		Tiles: make([]Tile, 0, MapWidth*MapHeight),
+		Tiles: make([]types.Tile, 0, MapWidth*MapHeight),
 	}
 
 	msg.PlayerPos = readPosition(pr)
@@ -119,9 +113,9 @@ func ParseMapDescriptionMsg(pr *protocol.PacketReader) (*MapDescriptionMsg, erro
 	}
 }
 
-func parseTile(pr *protocol.PacketReader, pos types.Position) Tile {
+func parseTile(pr *protocol.PacketReader, pos types.Position) types.Tile {
 	// 1. Setup the Tile struct
-	t := Tile{
+	t := types.Tile{
 		Position: pos,
 		Items:    make([]types.Item, 0, 4), // Pre-allocate small cap for performance
 	}
@@ -154,7 +148,7 @@ func parseTile(pr *protocol.PacketReader, pos types.Position) Tile {
 			err := readCreatureInMap(pr)
 			if err != nil {
 				// fmt.Printf("Error reading creature in map at tile %v: %v\n", pos, err)
-				return Tile{}
+				return types.Tile{}
 			}
 			continue
 		}

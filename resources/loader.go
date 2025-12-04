@@ -1,4 +1,4 @@
-package dat
+package resources
 
 import (
 	"encoding/json"

@@ -23,7 +23,7 @@ func readPosition(pr *protocol.PacketReader) types.Position {
 func readItem(pr *protocol.PacketReader) types.Item {
 	id := pr.ReadUint16()
 	item := types.Item{ID: id}
-	thing := dat.Get(id)
+	thing := resources.Get(id)
 
 	if thing.IsStackable || thing.IsFluid {
 		item.Count = pr.ReadByte()

@@ -29,7 +29,7 @@ import (
 )
 
 func main() {
-	if err := dat.LoadItemsJson("data/772/items.json"); err != nil {
+	if err := resources.LoadItemsJson("data/772/items.json"); err != nil {
 		log.Fatalf("Critical Error: %v", err)
 	}
 

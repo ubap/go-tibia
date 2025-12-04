@@ -1,4 +1,4 @@
-package dat
+package resources
 
 type ItemType struct {
 	ID   uint16 `json:"id"`
