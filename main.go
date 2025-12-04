@@ -20,10 +20,10 @@
 package main
 
 import (
-	"goTibia/dat"
 	"goTibia/handlers/game"
 	"goTibia/handlers/login"
 	"goTibia/proxy"
+	"goTibia/resources"
 	"log"
 	"sync"
 )

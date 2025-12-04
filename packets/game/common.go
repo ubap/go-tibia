@@ -1,8 +1,8 @@
 package game
 
 import (
-	"goTibia/dat"
 	"goTibia/protocol"
+	"goTibia/resources"
 	"goTibia/types"
 )
 
