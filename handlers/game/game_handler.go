@@ -14,8 +14,7 @@ import (
 type GameHandler struct {
 	TargetAddr string
 	State      *state.GameState
-	// You could add "DB *sql.DB" here later!
-	Bot bot.Bot
+	Bot        bot.Bot
 }
 
 func (h *GameHandler) Handle(client *protocol.Connection) {

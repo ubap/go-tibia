@@ -12,7 +12,6 @@ import (
 type LoginHandler struct {
 	TargetAddr string
 	ProxyMOTD  string
-	// You could add "DB *sql.DB" here later!
 }
 
 func (h *LoginHandler) Handle(protoClientConn *protocol.Connection) {
