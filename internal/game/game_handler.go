@@ -2,6 +2,7 @@ package game
 
 import (
 	"fmt"
+	"goTibia/internal/bot"
 	"goTibia/internal/game/packets"
 	"goTibia/internal/protocol"
 	"goTibia/internal/proxy"
@@ -11,7 +12,6 @@ import (
 type GameHandler struct {
 	TargetAddr string
 	State      *GameState
-	Bot        Bot
 }
 
 func (h *GameHandler) Handle(client *protocol.Connection) {
@@ -42,8 +42,24 @@ func (h *GameHandler) Handle(client *protocol.Connection) {
 	// Loop B: Client -> Server
 	go h.pipe(client, protoServerConn, "C2S", errChan)
 
-	h.Bot = *NewBot(h.State, protoServerConn, client)
-	h.Bot.Start()
+	// 1. Create the Adapter (The Bridge)
+	// We inject the specific connections for THIS session
+	adapter := &BotAdapter{
+		State:      h.State,
+		ServerConn: protoServerConn,
+		ClientConn: client,
+	}
+
+	// 2. Create the Bot (The Brain)
+	// The Bot only sees the Interfaces, not the concrete structs
+	myBot := bot.NewBot(adapter, adapter, adapter)
+
+	// 3. Start the Bot
+	log.Println("[Game] Starting Bot for this session...")
+	myBot.Start()
+
+	// 4. Ensure Bot stops when connection dies
+	defer myBot.Stop()
 
 	// Wait for the first error (disconnect)
 	disconnectErr := <-errChan
@@ -86,11 +102,17 @@ func (h *GameHandler) processPacketsFromServer(packetReader *protocol.PacketRead
 }
 
 func (h *GameHandler) processPacketFromServer(packet packets.S2CPacket) {
+	// This lock is needed because the Bot may also read/update the State concurrently.
+	// Performance can be improved by using more granular locks if needed.
+	// Locking for logging is not ideal, but for simplicity we do it here.
+	h.State.Lock()
+	defer h.State.Unlock()
+
 	switch p := packet.(type) {
 	case *packets.LoginResponse:
-		h.State.SetPlayerId(p.PlayerId)
+		h.State.Player.ID = p.PlayerId
 	case *packets.MapDescription:
-		h.State.SetPosition(p.Pos)
+		h.State.Player.Pos = p.Pos
 	case *packets.MoveCreatureMsg:
 		// log.Printf("[Game] MoveCreatureMsg %v", p)
 	case *packets.MagicEffect:
@@ -110,9 +132,9 @@ func (h *GameHandler) processPacketFromServer(packet packets.S2CPacket) {
 	case *packets.AddTileThingMsg:
 		log.Printf("[Game] AddTileThingMsg %v", p)
 	case *packets.AddInventoryItemMsg:
-		h.State.SetInventoryItem(p.Slot, p.Item)
+		h.State.Inventory[p.Slot] = p.Item
 	case *packets.RemoveInventoryItemMsg:
-		h.State.RemoveInventoryItem(p.Slot)
+		delete(h.State.Inventory, p.Slot)
 	case *packets.PingMsg:
 		// Ignore
 	default:

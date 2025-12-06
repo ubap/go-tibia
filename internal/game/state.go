@@ -2,7 +2,6 @@ package game
 
 import (
 	"goTibia/internal/game/domain"
-	"log"
 	"sync"
 )
 
@@ -27,45 +26,25 @@ type PlayerModel struct {
 	Pos  domain.Position
 }
 
-func (s *GameState) SetPlayerName(name string) {
+// Lock
+// Use this when UPDATING data (e.g., in GameHandler/Network)
+// No other thread can Read OR Write while this is held.
+func (s *GameState) Lock() {
 	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	s.Player.Name = name
 }
 
-func (s *GameState) SetPlayerId(ID uint32) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	s.Player.ID = ID
+func (s *GameState) Unlock() {
+	s.mu.Unlock()
 }
 
-func (s *GameState) SetPosition(pos domain.Position) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	s.Player.Pos = pos
-
-	log.Printf("Player position updated to: X=%d, Y=%d, Z=%d", pos.X, pos.Y, pos.Z)
-}
-
-func (s *GameState) SetInventoryItem(slot domain.InventorySlot, item domain.Item) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	s.Inventory[slot] = item
-}
-
-func (s *GameState) RemoveInventoryItem(slot domain.InventorySlot) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	delete(s.Inventory, slot)
-}
-
-func (s *GameState) GetName() string {
+// RLock
+// Use this when READING data (e.g., in Bot Logic)
+// Multiple threads can hold this at the same time.
+// It only blocks if someone is currently holding the Write Lock.
+func (s *GameState) RLock() {
 	s.mu.RLock()
-	defer s.mu.RUnlock()
-	return s.Player.Name
+}
+
+func (s *GameState) RUnlock() {
+	s.mu.RUnlock()
 }
