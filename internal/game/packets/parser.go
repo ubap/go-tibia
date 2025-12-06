@@ -2,13 +2,11 @@ package packets
 
 import (
 	"errors"
+	"goTibia/internal/game/domain"
 	"goTibia/internal/protocol"
 )
 
-// ErrUnknownOpcode is returned when we don't have a parser for this ID.
-// The proxy uses this signal to just forward the raw bytes.
 var ErrUnknownOpcode = errors.New("unknown opcode")
-var ErrNotFullyImplemented = errors.New("not fully implemented")
 
 // S2CPacket is a marker interface for any packet received from Server.
 type S2CPacket interface {
@@ -24,13 +22,13 @@ func ParseS2CPacket(opcode uint8, pr *protocol.PacketReader, ctx ParsingContext)
 	case S2CMapDescription:
 		return ParseMapDescriptionMsg(pr)
 	case S2CMapSliceNorth:
-		return ParseMove(pr, ctx, NORTH)
+		return ParseMove(pr, ctx, domain.North)
 	case S2CMapSliceSouth:
-		return ParseMove(pr, ctx, SOUTH)
+		return ParseMove(pr, ctx, domain.South)
 	case S2CMapSliceEast:
-		return ParseMove(pr, ctx, EAST)
+		return ParseMove(pr, ctx, domain.East)
 	case S2CMapSliceWest:
-		return ParseMove(pr, ctx, WEST)
+		return ParseMove(pr, ctx, domain.West)
 	case S2CMoveCreature:
 		return ParseMoveCreature(pr)
 	case S2CPing:

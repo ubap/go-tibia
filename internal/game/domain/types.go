@@ -28,3 +28,12 @@ type Tile struct {
 	Ground   *Item
 	Items    []Item
 }
+
+type Direction uint8
+
+const (
+	North Direction = 0
+	East  Direction = 1
+	South Direction = 2
+	West  Direction = 3
+)

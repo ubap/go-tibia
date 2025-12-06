@@ -13,8 +13,6 @@ const (
 	TileDataCreatureKnown   = 0x62 // 97
 	TileDataCreatureUnknown = 0x61 // 98
 	TileDataTurnCreature    = 0x63 // 99
-
-	NORTH, SOUTH, EAST, WEST = 0, 1, 2, 3
 )
 
 type MapDescriptionMsg struct {
@@ -22,7 +20,7 @@ type MapDescriptionMsg struct {
 	Tiles     []domain.Tile
 }
 
-func ParseMove(pr *protocol.PacketReader, ctx ParsingContext, direction int) (*MapDescriptionMsg, error) {
+func ParseMove(pr *protocol.PacketReader, ctx ParsingContext, direction domain.Direction) (*MapDescriptionMsg, error) {
 	msg := &MapDescriptionMsg{
 		PlayerPos: ctx.PlayerPosition,
 	}
@@ -31,16 +29,16 @@ func ParseMove(pr *protocol.PacketReader, ctx ParsingContext, direction int) (*M
 	height := MapHeight
 
 	switch direction {
-	case NORTH:
+	case domain.North:
 		msg.PlayerPos.Y = ctx.PlayerPosition.Y - 1
 		height = 1
-	case SOUTH:
+	case domain.South:
 		msg.PlayerPos.Y = ctx.PlayerPosition.Y + 1
 		height = 1
-	case WEST:
+	case domain.West:
 		msg.PlayerPos.X = ctx.PlayerPosition.X - 1
 		width = 1
-	case EAST:
+	case domain.East:
 		msg.PlayerPos.X = ctx.PlayerPosition.X + 1
 		width = 1
 	}
