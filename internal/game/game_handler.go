@@ -3,7 +3,7 @@ package game
 import (
 	"fmt"
 	"goTibia/internal/game/packets"
-	protocol2 "goTibia/internal/protocol"
+	"goTibia/internal/protocol"
 	"goTibia/internal/proxy"
 	"log"
 )
@@ -14,7 +14,7 @@ type GameHandler struct {
 	Bot        Bot
 }
 
-func (h *GameHandler) Handle(client *protocol2.Connection) {
+func (h *GameHandler) Handle(client *protocol.Connection) {
 	h.State = New()
 
 	log.Printf("[Game] New Connection: %s", client.RemoteAddr())
@@ -51,7 +51,7 @@ func (h *GameHandler) Handle(client *protocol2.Connection) {
 }
 
 // pipe moves data from src to dst indefinitely.
-func (h *GameHandler) pipe(src, dst *protocol2.Connection, tag string, errChan chan<- error) {
+func (h *GameHandler) pipe(src, dst *protocol.Connection, tag string, errChan chan<- error) {
 	for {
 		// TODO: The proxy could forward raw, unecrypted message right away. This will reduce latency.
 		// Right now I can't think of a scenario where we want to edit game packets on the fly.
@@ -73,7 +73,7 @@ func (h *GameHandler) pipe(src, dst *protocol2.Connection, tag string, errChan c
 	}
 }
 
-func (h *GameHandler) processPacketsFromServer(packetReader *protocol2.PacketReader) {
+func (h *GameHandler) processPacketsFromServer(packetReader *protocol.PacketReader) {
 	for packetReader.Remaining() > 0 {
 		opcode := packetReader.ReadByte()
 		packet, err := packets.ParseS2CPacket(opcode, packetReader)

@@ -2,7 +2,7 @@ package packets
 
 import (
 	"errors"
-	protocol2 "goTibia/internal/protocol"
+	"goTibia/internal/protocol"
 	"goTibia/internal/protocol/crypto"
 )
 
@@ -18,13 +18,13 @@ type LoginRequest struct {
 	Password      string
 }
 
-func (lr *LoginRequest) Encode(pw *protocol2.PacketWriter) {
+func (lr *LoginRequest) Encode(pw *protocol.PacketWriter) {
 	pw.WriteByte(lr.Protocol)
 	pw.WriteUint16(lr.ClientOS)
 	pw.WriteUint16(lr.ClientVersion)
 
 	// RSA Encrypted part starts here
-	toEncrypt := protocol2.NewPacketWriter()
+	toEncrypt := protocol.NewPacketWriter()
 
 	toEncrypt.WriteByte(0x00) // Write the check check byte
 	toEncrypt.WriteUint32(lr.XTEAKey[0])
@@ -46,7 +46,7 @@ func (lr *LoginRequest) Encode(pw *protocol2.PacketWriter) {
 	pw.WriteBytes(encryptedBlock)
 }
 
-func ParseLoginRequest(packetReader *protocol2.PacketReader) (*LoginRequest, error) {
+func ParseLoginRequest(packetReader *protocol.PacketReader) (*LoginRequest, error) {
 	packet := &LoginRequest{}
 
 	packet.Protocol = packetReader.ReadByte()
@@ -59,7 +59,7 @@ func ParseLoginRequest(packetReader *protocol2.PacketReader) (*LoginRequest, err
 	}
 
 	decryptedBlock := crypto.DecryptRSA(encryptedBlock)
-	decryptedBlockReader := protocol2.NewPacketReader(decryptedBlock)
+	decryptedBlockReader := protocol.NewPacketReader(decryptedBlock)
 	checkByte := decryptedBlockReader.ReadByte()
 	if checkByte != 0x00 {
 		return nil, errors.New("invalid checkByte")

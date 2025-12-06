@@ -2,7 +2,7 @@ package packets_test
 
 import (
 	"goTibia/internal/login/packets"
-	protocol2 "goTibia/internal/protocol"
+	"goTibia/internal/protocol"
 	"goTibia/internal/protocol/crypto"
 	"testing"
 
@@ -27,12 +27,12 @@ func Test_Encode_Parse(t *testing.T) {
 		Password:      "secret",
 	}
 
-	pw := protocol2.NewPacketWriter()
+	pw := protocol.NewPacketWriter()
 	packet.Encode(pw)
 	bytes, err := pw.GetBytes()
 	require.NoError(t, err, "Getting bytes from packet writer should not fail")
 
-	reader := protocol2.NewPacketReader(bytes)
+	reader := protocol.NewPacketReader(bytes)
 	loginPacket, err := packets.ParseCredentialsPacket(reader)
 	require.NoError(t, err, "Failed to parse login packet")
 
@@ -56,7 +56,7 @@ func TestParseLoginPacket_GoldenSample(t *testing.T) {
 		0x6d,
 	}
 
-	reader := protocol2.NewPacketReader(capturedPacket)
+	reader := protocol.NewPacketReader(capturedPacket)
 	packet, err := packets.ParseCredentialsPacket(reader)
 	require.NoError(t, err, "Failed to parse login packet")
 
@@ -90,12 +90,12 @@ func TestParseCredentials_WrongRSAKey(t *testing.T) {
 		AccountNumber: 42,
 		Password:      "secret",
 	}
-	pw := protocol2.NewPacketWriter()
+	pw := protocol.NewPacketWriter()
 	packet.Encode(pw)
 	validBytes, _ := pw.GetBytes()
 
 	// Attempt to parse
-	reader := protocol2.NewPacketReader(validBytes)
+	reader := protocol.NewPacketReader(validBytes)
 	_, err := packets.ParseCredentialsPacket(reader)
 
 	// Assert failure
@@ -116,7 +116,7 @@ func TestParseCredentials_TruncatedPacket(t *testing.T) {
 		AccountNumber: 42,
 		Password:      "secret",
 	}
-	pw := protocol2.NewPacketWriter()
+	pw := protocol.NewPacketWriter()
 	packet.Encode(pw)
 	fullBytes, _ := pw.GetBytes()
 
@@ -124,7 +124,7 @@ func TestParseCredentials_TruncatedPacket(t *testing.T) {
 	truncatedBytes := fullBytes[:len(fullBytes)/2]
 
 	// Attempt parse
-	reader := protocol2.NewPacketReader(truncatedBytes)
+	reader := protocol.NewPacketReader(truncatedBytes)
 	result, err := packets.ParseCredentialsPacket(reader)
 
 	// Assert
