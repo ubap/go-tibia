@@ -374,3 +374,35 @@ func ParsePlayerSkillMsg(pr *protocol.PacketReader) (*PlayerSkillsMsg, error) {
 	}
 	return psm, nil
 }
+
+type PlayerStatsMsg struct {
+	Health            uint16
+	MaxHealth         uint16
+	FreeCapacity      uint16
+	Experience        uint32
+	Level             uint16
+	LevelPercent      uint8
+	Mana              uint16
+	MaxMana           uint16
+	MagicLevel        uint8
+	MagicLevelPercent uint8
+	Soul              uint8
+}
+
+func ParsePlayerStatsMsg(pr *protocol.PacketReader) (*PlayerStatsMsg, error) {
+	psm := &PlayerStatsMsg{}
+
+	psm.Health = pr.ReadUint16()
+	psm.MaxHealth = pr.ReadUint16()
+	psm.FreeCapacity = pr.ReadUint16()
+	psm.Experience = pr.ReadUint32()
+	psm.Level = pr.ReadUint16()
+	psm.LevelPercent = pr.ReadByte()
+	psm.Mana = pr.ReadUint16()
+	psm.MaxMana = pr.ReadUint16()
+	psm.MagicLevel = pr.ReadByte()
+	psm.MagicLevelPercent = pr.ReadByte()
+	psm.Soul = pr.ReadByte()
+
+	return psm, nil
+}

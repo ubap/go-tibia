@@ -123,6 +123,7 @@ func (h *GameHandler) processPacketFromServer(packet packets.S2CPacket) {
 		// log.Printf("[Game] RemoveTileThingMsg %v", p)
 	case *packets.RemoveTileCreatureMsg:
 		// log.Printf("[Game] RemoveTileCreatureMsg %v", p)
+	case *packets.WorldLightMsg:
 	case *packets.CreatureLightMsg:
 		// log.Printf("[Game] CreatureLightMsg %v", p)
 	case *packets.CreatureHealthMsg:
@@ -151,6 +152,8 @@ func (h *GameHandler) processPacketFromServer(packet packets.S2CPacket) {
 		log.Printf("[Game] UpdateTileItem %v", p)
 	case *packets.PlayerSkillsMsg:
 		log.Printf("[Game] PlayerSkillsMsg %v", p)
+	case *packets.PlayerStatsMsg:
+		log.Printf("[Game] PlayerStatsMsg %v", p)
 
 	default:
 		log.Printf("[Game] Unhandled game packet type: %T", p)
