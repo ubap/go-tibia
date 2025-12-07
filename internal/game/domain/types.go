@@ -56,3 +56,26 @@ type Player struct {
 	Name string
 	Pos  Coordinate
 }
+
+type SkillType uint8
+
+const (
+	Fist     SkillType = 0
+	Club     SkillType = 1
+	Sword    SkillType = 2
+	Axe      SkillType = 3
+	Distance SkillType = 4
+	Shield   SkillType = 5
+	Fishing  SkillType = 6
+
+	Maglevel SkillType = 7
+	Level    SkillType = 8
+
+	SkillFirst = Fist
+	SkillLast  = Fishing
+)
+
+type Skill struct {
+	Level   uint8
+	Percent uint8
+}

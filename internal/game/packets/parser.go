@@ -65,6 +65,8 @@ func ParseS2CPacket(opcode uint8, pr *protocol.PacketReader, ctx ParsingContext)
 		return ParseUpdateContainerItemMsg(pr)
 	case S2CUpdateTileItem:
 		return ParseUpdateTileItemMsg(pr)
+	case S2CPlayerSkills:
+		return ParsePlayerSkillMsg(pr)
 
 	default:
 		return nil, ErrUnknownOpcode

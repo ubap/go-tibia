@@ -358,3 +358,19 @@ func ParseUpdateTileItemMsg(pr *protocol.PacketReader) (*UpdateTileItemMsg, erro
 
 	return utim, nil
 }
+
+type PlayerSkillsMsg struct {
+	Skills [domain.SkillLast + 1]domain.Skill
+}
+
+func ParsePlayerSkillMsg(pr *protocol.PacketReader) (*PlayerSkillsMsg, error) {
+	psm := &PlayerSkillsMsg{}
+
+	for i := domain.SkillFirst; i <= domain.SkillLast; i++ {
+		psm.Skills[i] = domain.Skill{
+			Level:   pr.ReadByte(),
+			Percent: pr.ReadByte(),
+		}
+	}
+	return psm, nil
+}

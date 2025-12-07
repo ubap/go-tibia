@@ -149,6 +149,8 @@ func (h *GameHandler) processPacketFromServer(packet packets.S2CPacket) {
 		h.State.UpdateContainerItem(p.ContainerID, p.Slot, p.Item)
 	case *packets.UpdateTileItemMsg:
 		log.Printf("[Game] UpdateTileItem %v", p)
+	case *packets.PlayerSkillsMsg:
+		log.Printf("[Game] PlayerSkillsMsg %v", p)
 
 	default:
 		log.Printf("[Game] Unhandled game packet type: %T", p)
