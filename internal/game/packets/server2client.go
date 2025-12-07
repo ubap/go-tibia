@@ -74,12 +74,12 @@ type ContainerMsg struct {
 }
 
 type AddInventoryItemMsg struct {
-	Slot domain.InventorySlot
+	Slot domain.EquipmentSlot
 	Item domain.Item
 }
 
 type RemoveInventoryItemMsg struct {
-	Slot domain.InventorySlot
+	Slot domain.EquipmentSlot
 }
 
 type SayMsg struct {
@@ -246,13 +246,13 @@ func ParseAddTileThingMsg(pr *protocol.PacketReader) (*AddTileThingMsg, error) {
 
 func ParseAddInventoryItemMsg(pr *protocol.PacketReader) (*AddInventoryItemMsg, error) {
 	aii := &AddInventoryItemMsg{}
-	aii.Slot = domain.InventorySlot(pr.ReadByte())
+	aii.Slot = domain.EquipmentSlot(pr.ReadByte())
 	aii.Item = readItem(pr)
 	return aii, nil
 }
 
 func ParseRemoveInventoryItemMsg(pr *protocol.PacketReader) (*RemoveInventoryItemMsg, error) {
 	rii := &RemoveInventoryItemMsg{}
-	rii.Slot = domain.InventorySlot(pr.ReadByte())
+	rii.Slot = domain.EquipmentSlot(pr.ReadByte())
 	return rii, nil
 }

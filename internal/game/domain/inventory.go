@@ -1,22 +1,22 @@
 package domain
 
-type InventorySlot uint8
+type EquipmentSlot uint8
 
 const (
-	SlotNone     InventorySlot = 0
-	SlotHead     InventorySlot = 1
-	SlotNeck     InventorySlot = 2
-	SlotBackpack InventorySlot = 3
-	SlotArmor    InventorySlot = 4
-	SlotRight    InventorySlot = 5
-	SlotLeft     InventorySlot = 6
-	SlotLegs     InventorySlot = 7
-	SlotFeet     InventorySlot = 8
-	SlotRing     InventorySlot = 9
-	SlotAmmo     InventorySlot = 10
+	SlotNone     EquipmentSlot = 0
+	SlotHead     EquipmentSlot = 1
+	SlotNeck     EquipmentSlot = 2
+	SlotBackpack EquipmentSlot = 3
+	SlotArmor    EquipmentSlot = 4
+	SlotRight    EquipmentSlot = 5
+	SlotLeft     EquipmentSlot = 6
+	SlotLegs     EquipmentSlot = 7
+	SlotFeet     EquipmentSlot = 8
+	SlotRing     EquipmentSlot = 9
+	SlotAmmo     EquipmentSlot = 10
 )
 
-func (s InventorySlot) String() string {
+func (s EquipmentSlot) String() string {
 	switch s {
 	case SlotNone:
 		return "None"

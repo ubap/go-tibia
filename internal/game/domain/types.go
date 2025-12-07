@@ -36,3 +36,9 @@ const (
 	South Direction = 2
 	West  Direction = 3
 )
+
+type Player struct {
+	ID   uint32
+	Name string
+	Pos  Coordinate
+}

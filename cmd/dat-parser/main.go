@@ -29,7 +29,6 @@ type ItemAttributes struct {
 	IsMissileBlock bool   `json:"is_missile_block,omitempty"` // Blocks Projectiles
 	IsPathBlock    bool   `json:"is_path_block,omitempty"`    // Unpassable (Magic Walls)
 
-	// --- Inventory Logic ---
 	IsContainer  bool `json:"is_container,omitempty"`
 	IsStackable  bool `json:"is_stackable,omitempty"`
 	IsFluid      bool `json:"is_fluid,omitempty"`

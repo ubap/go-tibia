@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"goTibia/internal/bot"
 	"goTibia/internal/game/packets"
+	"goTibia/internal/game/state"
 	"goTibia/internal/protocol"
 	"goTibia/internal/proxy"
 	"log"
@@ -11,11 +12,11 @@ import (
 
 type GameHandler struct {
 	TargetAddr string
-	State      *GameState
+	State      *state.GameState
 }
 
 func (h *GameHandler) Handle(client *protocol.Connection) {
-	h.State = New()
+	h.State = state.New()
 
 	log.Printf("[Game] New Connection: %s", client.RemoteAddr())
 
@@ -92,11 +93,9 @@ func (h *GameHandler) pipe(src, dst *protocol.Connection, tag string, errChan ch
 func (h *GameHandler) processPacketsFromServer(packetReader *protocol.PacketReader) {
 	for packetReader.Remaining() > 0 {
 
-		h.State.RLock()
 		ctx := packets.ParsingContext{
-			PlayerPosition: h.State.Player.Pos,
+			PlayerPosition: h.State.CaptureFrame().Player.Pos,
 		}
-		h.State.RUnlock()
 
 		opcode := packetReader.ReadByte()
 		packet, err := packets.ParseS2CPacket(opcode, packetReader, ctx)
@@ -109,18 +108,11 @@ func (h *GameHandler) processPacketsFromServer(packetReader *protocol.PacketRead
 }
 
 func (h *GameHandler) processPacketFromServer(packet packets.S2CPacket) {
-	// This lock is needed because the Bot may also read/update the State concurrently.
-	// Performance can be improved by using more granular locks if needed.
-	// Locking for logging is not ideal, but for simplicity we do it here.
-	h.State.Lock()
-	defer h.State.Unlock()
-
 	switch p := packet.(type) {
 	case *packets.LoginResponse:
-		h.State.Player.ID = p.PlayerId
+		h.State.SetPlayerId(p.PlayerId)
 	case *packets.MapDescriptionMsg:
-		h.State.Player.Pos = p.PlayerPos
-		log.Printf("[Game] Pos %v", p.PlayerPos)
+		h.State.SetPlayerPos(p.PlayerPos)
 	case *packets.MoveCreatureMsg:
 		// log.Printf("[Game] MoveCreatureMsg %v", p)
 	case *packets.MagicEffect:
@@ -140,9 +132,9 @@ func (h *GameHandler) processPacketFromServer(packet packets.S2CPacket) {
 	case *packets.AddTileThingMsg:
 		log.Printf("[Game] AddTileThingMsg %v", p)
 	case *packets.AddInventoryItemMsg:
-		h.State.Inventory[p.Slot] = p.Item
+		h.State.SetEquipment(p.Slot, p.Item)
 	case *packets.RemoveInventoryItemMsg:
-		delete(h.State.Inventory, p.Slot)
+		h.State.ClearEquipmentSlot(p.Slot)
 	case *packets.PingMsg:
 		// Ignore
 	default:

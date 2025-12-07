@@ -4,12 +4,13 @@ import (
 	"goTibia/internal/bot"
 	"goTibia/internal/game/domain"
 	"goTibia/internal/game/packets"
+	"goTibia/internal/game/state"
 	"goTibia/internal/protocol"
 	"log"
 )
 
 type BotAdapter struct {
-	State      *GameState
+	State      *state.GameState
 	ServerConn *protocol.Connection
 	ClientConn *protocol.Connection
 }
@@ -17,22 +18,15 @@ type BotAdapter struct {
 // region Implementing WorldStateReader
 
 func (ba *BotAdapter) GetPlayerPosition() domain.Coordinate {
-	// Thread-safe access to state
-	ba.State.Lock()
-	defer ba.State.Unlock()
-	return ba.State.Player.Pos
+	return ba.State.CaptureFrame().Player.Pos
 }
 
-func (ba *BotAdapter) GetInventoryItem(slot domain.InventorySlot) domain.Item {
-	ba.State.Lock()
-	defer ba.State.Unlock()
-	return ba.State.Inventory[slot]
+func (ba *BotAdapter) GetInventoryItem(slot domain.EquipmentSlot) domain.Item {
+	return ba.State.CaptureFrame().Equipment[slot]
 }
 
 func (ba *BotAdapter) GetPlayerID() uint32 {
-	ba.State.Lock()
-	defer ba.State.Unlock()
-	return ba.State.Player.ID
+	return ba.State.CaptureFrame().Player.ID
 }
 
 // endregion Implementing WorldStateReader
@@ -50,12 +44,10 @@ func (ba *BotAdapter) Say(text string) {
 var _ bot.ClientManipulator = (*BotAdapter)(nil)
 
 func (ba *BotAdapter) SetLocalPlayerLight(lightLevel uint8, color uint8) {
-	ba.State.Lock()
-	id := ba.State.Player.ID
-	ba.State.Unlock()
+	id := ba.State.CaptureFrame().Player.ID
 
-	// Safety check
 	if id == 0 {
+		// Player is not logged in yet
 		return
 	}
 

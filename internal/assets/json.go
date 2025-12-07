@@ -11,7 +11,6 @@ type ItemType struct {
 	IsMissileBlock bool   `json:"is_missile_block,omitempty"` // Walls projectiles
 	IsPathBlock    bool   `json:"is_path_block,omitempty"`    // Unpassable
 
-	// Inventory
 	IsContainer  bool `json:"is_container,omitempty"`
 	IsStackable  bool `json:"is_stackable,omitempty"`
 	IsFluid      bool `json:"is_fluid,omitempty"`
