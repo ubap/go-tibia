@@ -13,7 +13,7 @@ The bot needs to know about game physics (walls, stackable items).
 You need a modified client to connect to the bot.
 1.  Run the patcher, pointing to your Tibia installation:
     ```bash
-    go run tools/client-patcher/main.go -binary "C:\Games\Tibia772\Tibia.exe"
+    go run cmd/client-patcher/main.go -binary "C:\Games\Tibia772\Tibia.exe" -ip 192.168.1.142
     ```
 2.  This creates `Tibia_patched.exe` inside `C:\Games\Tibia772\`.
 3.  **Run `Tibia_patched.exe`** from that folder to play.

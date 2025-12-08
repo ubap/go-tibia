@@ -60,7 +60,7 @@ func injectProxyGameworldIP(message *packets.LoginResultMessage) {
 	for _, c := range message.CharacterList.Characters {
 
 		// TODO: Extract configuration - do not hardcode
-		ip, err := protocol.StringToIP("192.168.1.140")
+		ip, err := protocol.StringToIP("192.168.1.142")
 		if err != nil {
 			panic("StringToIP failed")
 		}
