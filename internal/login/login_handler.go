@@ -27,26 +27,28 @@ func (h *LoginHandler) Handle(protoClientConn *protocol.Connection) {
 
 	_, packetReader, err := protoServerConn.ReadMessage()
 	if err != nil {
-		log.Printf("Login: Failed to read server response for %s: %v", protoClientConn.RemoteAddr(), err)
+		log.Printf("[Login]: Failed to read server response for %s: %v", protoClientConn.RemoteAddr(), err)
 		return
 	}
 
 	loginResultMessage, err := packets.ParseLoginResultMessage(packetReader)
 	if err != nil {
-		log.Printf("Login: Failed to receive login result message for %s: %v", protoClientConn.RemoteAddr(), err)
+		log.Printf("[Login]: Failed to receive login result message for %s: %v", protoClientConn.RemoteAddr(), err)
 		return
 	}
 
-	injectMotd(loginResultMessage, h.ProxyMOTD)
-	injectProxyGameworldIP(loginResultMessage)
+	if !loginResultMessage.ClientDisconnected {
+		injectMotd(loginResultMessage, h.ProxyMOTD)
+		injectProxyGameworldIP(loginResultMessage)
+	}
 
 	err = protoClientConn.SendPacket(loginResultMessage)
 	if err != nil {
-		log.Printf("Login: Failed to send login result message for %s: %v", protoClientConn.RemoteAddr(), err)
+		log.Printf("[Login]: Failed to send login result message for %s: %v", protoClientConn.RemoteAddr(), err)
 		return
 	}
 
-	log.Printf("Login: Connection for %s finished.", protoClientConn.RemoteAddr())
+	log.Printf("[Login]: Connection for %s finished.", protoClientConn.RemoteAddr())
 }
 
 func injectMotd(message *packets.LoginResultMessage, motd string) {
