@@ -1,26 +1,31 @@
 package bot
 
 import (
+	"goTibia/internal/game/packets"
+	"goTibia/internal/game/state"
 	"log"
 	"sync"
 	"time"
 )
 
 type Bot struct {
-	reader  WorldStateReader
-	actions ActionDispatcher
-	client  ClientManipulator
+	Outbox      chan packets.C2SPacket
+	State       *state.GameState
+	UserActions chan packets.C2SPacket
 
-	// lifecycle management
-	stopChan chan struct{}
-	wg       sync.WaitGroup
+	stopChan chan struct{}  // The broadcast channel
+	wg       sync.WaitGroup // To wait for modules to finish
+	stopOnce sync.Once      // To ensure we close the channel only once
 }
 
-func NewBot(r WorldStateReader, a ActionDispatcher, c ClientManipulator) *Bot {
+func NewBot(state *state.GameState) *Bot {
 	return &Bot{
-		reader:  r,
-		actions: a,
-		client:  c,
+		State: state,
+
+		Outbox:      make(chan packets.C2SPacket, 100),
+		UserActions: make(chan packets.C2SPacket, 100),
+
+		stopChan: make(chan struct{}),
 	}
 }
 
@@ -29,12 +34,17 @@ func (b *Bot) Start() {
 
 	// 1. The Light Hack (For testing S2C injection)
 	b.runModule("LightHack", b.loopLightHack)
+	b.runModule("HandleUserAction", b.loopHandleUserAction)
 }
 
 func (b *Bot) Stop() {
-	close(b.stopChan) // Signal all loops to stop
-	b.wg.Wait()       // Wait for them to finish
-	log.Println("[Bot] Engine stopped")
+	b.stopOnce.Do(func() {
+		log.Println("[Bot] Stopping engine...")
+		close(b.stopChan) // This broadcasts the signal to ALL loops instantly
+	})
+
+	b.wg.Wait()
+	log.Println("[Bot] Engine stopped cleanly.")
 }
 
 func (b *Bot) runModule(name string, logic func()) {
@@ -59,14 +69,31 @@ func (b *Bot) loopLightHack() {
 			return
 
 		case <-ticker.C:
-			// 1. Abstract Query: Are we logged in?
-			if b.reader.GetPlayerID() == 0 {
+			pId := b.State.CaptureFrame().Player.ID
+
+			if pId == 0 {
 				continue
 			}
 
-			// 2. Abstract Action: Make it bright!
-			// We don't care about Packet IDs or Byte construction here.
-			b.client.SetLocalPlayerLight(0xFF, 215)
+			//b.client.SetLocalPlayerLight(0xFF, 215)
 		}
+	}
+}
+
+func (b *Bot) loopHandleUserAction() {
+	for {
+		select {
+		case <-b.stopChan:
+			return
+		case packet := <-b.UserActions:
+			b.handleUserAction(packet)
+		}
+	}
+}
+
+func (b *Bot) handleUserAction(packet packets.C2SPacket) {
+	switch p := packet.(type) {
+	case *packets.LookRequest:
+		log.Printf("User looked at item ID: %d", p.ItemId)
 	}
 }
