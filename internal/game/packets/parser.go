@@ -8,6 +8,9 @@ import (
 
 var ErrUnknownOpcode = errors.New("unknown opcode")
 
+type C2SPacket interface {
+}
+
 // S2CPacket is a marker interface for any packet received from Server.
 type S2CPacket interface {
 	// We can add methods here later, e.g., Name() string
@@ -70,6 +73,15 @@ func ParseS2CPacket(opcode uint8, pr *protocol.PacketReader, ctx ParsingContext)
 	case S2CPlayerStats:
 		return ParsePlayerStatsMsg(pr)
 
+	default:
+		return nil, ErrUnknownOpcode
+	}
+}
+
+func ParseC2SPacket(opcode uint8, pr *protocol.PacketReader) (C2SPacket, error) {
+	switch opcode {
+	case C2SLookRequest:
+		return ParseLookRequest(pr)
 	default:
 		return nil, ErrUnknownOpcode
 	}

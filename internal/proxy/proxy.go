@@ -49,6 +49,7 @@ func (s *Server) Start() error {
 		go func() {
 			defer protoConn.Close()
 			s.Handler.Handle(protoConn)
+			log.Printf("[%s] Connection closed", s.Name)
 		}()
 	}
 }
