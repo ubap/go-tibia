@@ -13,15 +13,21 @@ import (
 
 type GameHandler struct {
 	TargetAddr string
+}
+
+type GameSession struct {
+	ID         string
 	State      *state.GameState
+	Bot        *bot.Bot
+	ClientConn *protocol.Connection
+	ServerConn *protocol.Connection
+	ErrChan    chan error
 }
 
 func (h *GameHandler) Handle(client *protocol.Connection) {
-	h.State = state.New()
-
 	log.Printf("[Game] New Connection: %s", client.RemoteAddr())
 
-	_, protoServerConn, err := proxy.InitSession(
+	loginPkt, protoServerConn, err := proxy.InitSession(
 		"Game",
 		client,
 		h.TargetAddr,
@@ -33,69 +39,71 @@ func (h *GameHandler) Handle(client *protocol.Connection) {
 	}
 	defer protoServerConn.Close()
 
-	// 4. Start the Bidirectional Pipe
-	// We use a channel to detect when either side disconnects.
-	// If one side dies, we unblock and the function exits (triggering defers).
-	errChan := make(chan error, 2)
+	gameState := state.New()
+	gameState.SetPlayerName(loginPkt.CharacterName)
 
-	// Loop A: Server -> Client
-	go h.pipe(protoServerConn, client, "S2C", errChan)
-
-	// Loop B: Client -> Server
-	go h.pipe(client, protoServerConn, "C2S", errChan)
-
-	// 1. Create the Adapter (The Bridge)
-	// We inject the specific connections for THIS session
-	adapter := &BotAdapter{
-		State:      h.State,
-		ServerConn: protoServerConn,
+	session := &GameSession{
+		ID:         client.RemoteAddr().String(),
+		State:      gameState,
 		ClientConn: client,
+		ServerConn: protoServerConn,
+		ErrChan:    make(chan error, 100),
 	}
+	session.Bot = bot.NewBot(gameState, client, protoServerConn)
 
-	// 2. Create the Bot (The Brain)
-	// The Bot only sees the Interfaces, not the concrete structs
-	myBot := bot.NewBot(adapter, adapter, adapter)
+	go session.loopS2C()
+	go session.loopC2S()
+	go session.Bot.Start()
 
-	// 3. Start the Bot
-	log.Println("[Game] Starting Bot for this session...")
-	myBot.Start()
-
-	// 4. Ensure Bot stops when connection dies
-	defer myBot.Stop()
-
-	// Wait for the first error (disconnect)
-	disconnectErr := <-errChan
+	disconnectErr := <-session.ErrChan
 	log.Printf("[Game] Connection closed: %v", disconnectErr)
+	session.Bot.Stop()
 }
 
-// pipe moves data from src to dst indefinitely.
-func (h *GameHandler) pipe(src, dst *protocol.Connection, tag string, errChan chan<- error) {
+func (g *GameSession) loopS2C() {
 	for {
-		// TODO: The proxy could forward raw, unecrypted message right away. This will reduce latency.
-		// Right now I can't think of a scenario where we want to edit game packets on the fly.
-		rawMsg, packetReader, err := src.ReadMessage()
+		// 1. Read Raw
+		rawMsg, packetReader, err := g.ServerConn.ReadMessage()
 		if err != nil {
-			errChan <- fmt.Errorf("%s Read Error: %w", tag, err)
+			g.ErrChan <- fmt.Errorf("S2C Read: %w", err)
+			return
+		}
+		if err := g.ClientConn.WriteMessage(rawMsg); err != nil {
+			g.ErrChan <- fmt.Errorf("S2C Write: %w", err)
 			return
 		}
 
-		if tag == "S2C" {
-			h.processPacketsFromServer(packetReader)
-		}
-
-		// 2. Forward to Destination
-		if err := dst.WriteMessage(rawMsg); err != nil {
-			errChan <- fmt.Errorf("%s Write Error: %w", tag, err)
-			return
-		}
+		go g.processPacketsFromServer(packetReader)
 	}
 }
 
-func (h *GameHandler) processPacketsFromServer(packetReader *protocol.PacketReader) {
+func (g *GameSession) loopC2S() {
+	for {
+		rawMsg, _, err := g.ClientConn.ReadMessage()
+		if err != nil {
+			g.ErrChan <- fmt.Errorf("C2S Read: %w", err)
+			return
+		}
+		if err := g.ServerConn.WriteMessage(rawMsg); err != nil {
+			g.ErrChan <- fmt.Errorf("C2S Write: %w", err)
+			return
+		}
+
+		packetReader := protocol.NewPacketReader(rawMsg)
+		opcode := packetReader.ReadByte()
+		packet, err := packets.ParseC2SPacket(opcode, packetReader)
+		if err == nil {
+			g.Bot.UserActions <- packet
+		}
+
+	}
+}
+
+func (g *GameSession) processPacketsFromServer(packetReader *protocol.PacketReader) {
 	for packetReader.Remaining() > 0 {
 
 		ctx := packets.ParsingContext{
-			PlayerPosition: h.State.CaptureFrame().Player.Pos,
+			PlayerPosition: g.State.CaptureFrame().Player.Pos,
 		}
 
 		opcode := packetReader.ReadByte()
@@ -104,17 +112,17 @@ func (h *GameHandler) processPacketsFromServer(packetReader *protocol.PacketRead
 			log.Printf("[Game] Failed to parse game packet (opcode: 0x%X): %v", opcode, err)
 			break
 		}
-		h.processPacketFromServer(packet)
+		g.processPacketFromServer(packet)
 	}
 }
 
-func (h *GameHandler) processPacketFromServer(packet packets.S2CPacket) {
+func (g *GameSession) processPacketFromServer(packet packets.S2CPacket) {
 	switch p := packet.(type) {
 	case *packets.LoginResponse:
-		h.State.SetPlayerId(p.PlayerId)
+		g.State.SetPlayerId(p.PlayerId)
 	case *packets.PingMsg: // Ignore
 	case *packets.MapDescriptionMsg:
-		h.State.SetPlayerPos(p.PlayerPos)
+		g.State.SetPlayerPos(p.PlayerPos)
 	case *packets.MoveCreatureMsg:
 		// log.Printf("[Game] MoveCreatureMsg %v", p)
 	case *packets.MagicEffect:
@@ -135,19 +143,19 @@ func (h *GameHandler) processPacketFromServer(packet packets.S2CPacket) {
 	case *packets.AddTileThingMsg:
 		log.Printf("[Game] AddTileThingMsg %v", p)
 	case *packets.AddInventoryItemMsg:
-		h.State.SetEquipment(p.Slot, p.Item)
+		g.State.SetEquipment(p.Slot, p.Item)
 	case *packets.RemoveInventoryItemMsg:
-		h.State.ClearEquipmentSlot(p.Slot)
+		g.State.ClearEquipmentSlot(p.Slot)
 	case *packets.OpenContainerMsg:
-		h.handleContainerOpen(p)
+		g.handleContainerOpen(p)
 	case *packets.CloseContainerMsg:
-		h.State.CloseContainer(p.ContainerID)
+		g.State.CloseContainer(p.ContainerID)
 	case *packets.RemoveContainerItemMsg:
-		h.State.RemoveContainerItem(p.ContainerID, p.Slot)
+		g.State.RemoveContainerItem(p.ContainerID, p.Slot)
 	case *packets.AddContainerItemMsg:
-		h.State.AddContainerItem(p.ContainerID, p.Item)
+		g.State.AddContainerItem(p.ContainerID, p.Item)
 	case *packets.UpdateContainerItemMsg:
-		h.State.UpdateContainerItem(p.ContainerID, p.Slot, p.Item)
+		g.State.UpdateContainerItem(p.ContainerID, p.Slot, p.Item)
 	case *packets.UpdateTileItemMsg:
 		log.Printf("[Game] UpdateTileItem %v", p)
 	case *packets.PlayerSkillsMsg:
@@ -161,7 +169,7 @@ func (h *GameHandler) processPacketFromServer(packet packets.S2CPacket) {
 	}
 }
 
-func (h *GameHandler) handleContainerOpen(p *packets.OpenContainerMsg) {
+func (h *GameSession) handleContainerOpen(p *packets.OpenContainerMsg) {
 	// 1. Translate Packet -> Domain
 	container := domain.Container{
 		ID:       p.ContainerID,

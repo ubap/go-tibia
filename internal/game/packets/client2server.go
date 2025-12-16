@@ -2,6 +2,7 @@ package packets
 
 import (
 	"errors"
+	"goTibia/internal/game/domain"
 	"goTibia/internal/protocol"
 	"goTibia/internal/protocol/crypto"
 )
@@ -79,4 +80,20 @@ func ParseLoginRequest(packetReader *protocol.PacketReader) (*LoginRequest, erro
 
 func (lr *LoginRequest) GetXTEAKey() [4]uint32 {
 	return lr.XTEAKey
+}
+
+type LookRequest struct {
+	Pos      domain.Coordinate
+	ItemId   uint16
+	StackPos uint8
+}
+
+func ParseLookRequest(pr *protocol.PacketReader) (*LookRequest, error) {
+	lr := &LookRequest{}
+
+	lr.Pos = readPosition(pr)
+	lr.ItemId = pr.ReadUint16()
+	lr.StackPos = pr.ReadByte()
+
+	return lr, nil
 }

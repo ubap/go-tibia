@@ -36,3 +36,7 @@ const (
 	S2CPlayerIcons         uint8 = 0xA2
 	S2CSay                 uint8 = 0xAA
 )
+
+const (
+	C2SLookRequest uint8 = 0x8C
+)

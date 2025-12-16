@@ -46,6 +46,13 @@ func (gs *GameState) SetPlayerPos(pos domain.Coordinate) {
 	gs.player.Pos = pos
 }
 
+func (gs *GameState) SetPlayerName(Name string) {
+	gs.mu.Lock()
+	defer gs.mu.Unlock()
+
+	gs.player.Name = Name
+}
+
 func (gs *GameState) SetEquipment(slot domain.EquipmentSlot, item domain.Item) {
 	gs.mu.Lock()
 	defer gs.mu.Unlock()
