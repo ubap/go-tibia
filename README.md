@@ -56,12 +56,5 @@ Key successfully saved to: RSA.txt
 
 
 ----
-Package structure (outdated)
-
-    Login --> Packets
-    Login --> Protocol
-
-    Packets --> Protocol
-
-    Protocol --> Nothing
-    Model --> Nothing
+Decisions:
+* bot holds connections to client and to server, bot sends the packets, not any channels
