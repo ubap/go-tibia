@@ -47,12 +47,9 @@ func TestConnection_ReadMessage_Unencrypted(t *testing.T) {
 	mock.ReadBuf.Write(payload)
 
 	// Act
-	readPayload, reader, err := conn.ReadMessage()
+	rawMsg, err := conn.ReadMessage()
 	require.NoError(t, err, "ReadMessage failed")
 
 	// Assert Payload
-	require.True(t, bytes.Equal(readPayload, payload), "Payload mismatch")
-
-	// Sanity check on reader
-	require.Equal(t, byte(0xDE), reader.ReadByte(), "First byte mismatch in PacketReader")
+	require.True(t, bytes.Equal(rawMsg, payload), "Payload mismatch")
 }

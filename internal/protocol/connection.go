@@ -34,40 +34,40 @@ func (c *Connection) EnableXTEA(key [4]uint32) {
 	c.XTEAKey = key
 }
 
-func (c *Connection) ReadMessage() ([]byte, *PacketReader, error) {
+func (c *Connection) ReadMessage() ([]byte, error) {
 	// Read the header (2 bytes)
 	var header [2]byte
 	if _, err := io.ReadFull(c.conn, header[:]); err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	length := binary.LittleEndian.Uint16(header[:])
 
 	// 2. Read the exact payload
 	payload := make([]byte, length)
 	if _, err := io.ReadFull(c.conn, payload); err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	if c.XTEAEnabled {
 		var err error
 		payload, err = crypto.DecryptXTEA(payload, c.XTEAKey)
 		if err != nil {
-			return nil, nil, fmt.Errorf("decryption failed: %w", err)
+			return nil, fmt.Errorf("decryption failed: %w", err)
 		}
 		if len(payload) < 2 {
-			return nil, nil, fmt.Errorf("decrypted payload too short: %d bytes", len(payload))
+			return nil, fmt.Errorf("decrypted payload too short: %d bytes", len(payload))
 		}
 		innerLength := binary.LittleEndian.Uint16(payload[0:2])
 
 		requiredSize := int(innerLength) + 2
 		if requiredSize > len(payload) {
-			return nil, nil, fmt.Errorf("malformed packet: inner length %d exceeds buffer size %d", innerLength, len(payload))
+			return nil, fmt.Errorf("malformed packet: inner length %d exceeds buffer size %d", innerLength, len(payload))
 		}
 
 		payload = payload[2:requiredSize]
 	}
 
-	return payload, NewPacketReader(payload), nil
+	return payload, nil
 }
 
 func (c *Connection) WriteMessage(payload []byte) error {

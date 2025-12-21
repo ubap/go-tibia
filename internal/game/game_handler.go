@@ -66,7 +66,7 @@ func (h *GameHandler) Handle(client *protocol.Connection) {
 func (g *GameSession) loopS2C() {
 	for {
 		// 1. Read Raw
-		rawMsg, packetReader, err := g.ServerConn.ReadMessage()
+		rawMsg, err := g.ServerConn.ReadMessage()
 		if err != nil {
 			g.ErrChan <- fmt.Errorf("S2C Read: %w", err)
 			return
@@ -86,13 +86,13 @@ func (g *GameSession) loopS2C() {
 			}
 		}
 
-		go g.processPacketsFromServer(packetReader)
+		go g.processPacketsFromServer(rawMsg)
 	}
 }
 
 func (g *GameSession) loopC2S() {
 	for {
-		rawMsg, _, err := g.ClientConn.ReadMessage()
+		rawMsg, err := g.ClientConn.ReadMessage()
 		if err != nil {
 			g.ErrChan <- fmt.Errorf("C2S Read: %w", err)
 			return
@@ -127,7 +127,8 @@ func (g *GameSession) c2sPacketObserver() {
 	}
 }
 
-func (g *GameSession) processPacketsFromServer(packetReader *protocol.PacketReader) {
+func (g *GameSession) processPacketsFromServer(rawMsg []byte) {
+	packetReader := protocol.NewPacketReader(rawMsg)
 	for packetReader.Remaining() > 0 {
 
 		ctx := packets.ParsingContext{
