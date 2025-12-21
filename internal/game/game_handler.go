@@ -71,9 +71,19 @@ func (g *GameSession) loopS2C() {
 			g.ErrChan <- fmt.Errorf("S2C Read: %w", err)
 			return
 		}
-		if err := g.ClientConn.WriteMessage(rawMsg); err != nil {
-			g.ErrChan <- fmt.Errorf("S2C Write: %w", err)
-			return
+
+		packet, patch := g.Bot.PatchS2CPacket(rawMsg)
+		if patch {
+			err := g.ClientConn.SendPacket(packet)
+			if err != nil {
+				g.ErrChan <- fmt.Errorf("S2C Write: %w", err)
+				return
+			}
+		} else {
+			if err := g.ClientConn.WriteMessage(rawMsg); err != nil {
+				g.ErrChan <- fmt.Errorf("S2C Write: %w", err)
+				return
+			}
 		}
 
 		go g.processPacketsFromServer(packetReader)

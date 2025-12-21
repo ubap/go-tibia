@@ -412,6 +412,12 @@ type LoginQueueMsg struct {
 	RetryTimeSeconds uint8
 }
 
+func (lqm *LoginQueueMsg) Encode(pw *protocol.PacketWriter) {
+	pw.WriteByte(S2CSLoginQueue)
+	pw.WriteString(lqm.Message)
+	pw.WriteByte(lqm.RetryTimeSeconds)
+}
+
 func ParseLoginQueueMsg(pr *protocol.PacketReader) (*LoginQueueMsg, error) {
 	lqm := &LoginQueueMsg{}
 	lqm.Message = pr.ReadString()

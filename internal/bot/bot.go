@@ -103,3 +103,13 @@ func (b *Bot) handleUserAction(packet packets.C2SPacket) {
 		log.Printf("User looked at item ID: %d", p.ItemId)
 	}
 }
+
+func (b *Bot) PatchS2CPacket(data []byte) (protocol.Encodable, bool) {
+	pr := protocol.NewPacketReader(data)
+	opcode := pr.ReadByte()
+	switch opcode {
+	case packets.S2CSLoginQueue:
+		return &packets.LoginQueueMsg{Message: "patched for you :)", RetryTimeSeconds: 1}, true
+	}
+	return nil, false
+}
