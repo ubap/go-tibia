@@ -106,10 +106,9 @@ func (g *GameSession) processPacketsFromServer(rawMsg []byte) {
 			PlayerPosition: g.State.CaptureFrame().Player.Pos,
 		}
 
-		opcode := packetReader.ReadByte()
-		packet, err := packets.ParseS2CPacket(opcode, packetReader, ctx)
+		packet, err := packets.ReadAndParseS2C(packetReader, ctx)
 		if err != nil {
-			log.Printf("[Game] Failed to parse game packet (opcode: 0x%X): %v", opcode, err)
+			log.Printf("[Game] Failed to parse packet: %v", err)
 			break
 		}
 		g.processPacketFromServer(packet)

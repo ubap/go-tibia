@@ -99,8 +99,7 @@ func (b *Bot) loopHandleUserAction() {
 
 func (b *Bot) handleUserAction(rawMsg []byte) {
 	packetReader := protocol.NewPacketReader(rawMsg)
-	opcode := packetReader.ReadByte()
-	packet, err := packets.ParseC2SPacket(opcode, packetReader)
+	packet, err := packets.ReadAndParseC2S(packetReader)
 	if err != nil {
 		return
 	}
@@ -113,7 +112,7 @@ func (b *Bot) handleUserAction(rawMsg []byte) {
 // PatchS2CPacket has to return immediately.
 func (b *Bot) PatchS2CPacket(data []byte) ([]byte, error) {
 	pr := protocol.NewPacketReader(data)
-	opcode := pr.ReadByte()
+	opcode := packets.S2COpcode(pr.ReadByte())
 	switch opcode {
 	case packets.S2CSLoginQueue:
 		pw := protocol.NewPacketWriter()

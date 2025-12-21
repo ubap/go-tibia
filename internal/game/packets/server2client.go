@@ -195,13 +195,13 @@ func ParseCreatureHealth(pr *protocol.PacketReader) (*CreatureHealthMsg, error) 
 }
 
 func (lr *WorldLightMsg) Encode(pw *protocol.PacketWriter) {
-	pw.WriteByte(S2CWorldLight)
+	pw.WriteByte(byte(S2CWorldLight))
 	pw.WriteByte(lr.LightLevel)
 	pw.WriteByte(lr.Color)
 }
 
 func (cr *CreatureLightMsg) Encode(pw *protocol.PacketWriter) {
-	pw.WriteByte(S2CCreatureLight)
+	pw.WriteByte(byte(S2CCreatureLight))
 	pw.WriteUint32(cr.CreatureID)
 	pw.WriteByte(cr.LightLevel)
 	pw.WriteByte(cr.Color)
@@ -413,7 +413,7 @@ type LoginQueueMsg struct {
 }
 
 func (lqm *LoginQueueMsg) Encode(pw *protocol.PacketWriter) {
-	pw.WriteByte(S2CSLoginQueue)
+	pw.WriteByte(byte(S2CSLoginQueue))
 	pw.WriteString(lqm.Message)
 	pw.WriteByte(lqm.RetryTimeSeconds)
 }

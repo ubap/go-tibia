@@ -6,38 +6,41 @@ Mac: pbpaste | sort -k 5 | pbcopy
 Linux: xclip -o | sort -k 5 | xclip -sel clip
 */
 
+type S2COpcode uint8
+type C2SOpcode uint8
+
 const (
-	S2CLoginSuccessful     uint8 = 0x0A
-	S2CLoginAsAdmin        uint8 = 0x0B
-	S2CServerClosed        uint8 = 0x14
-	S2CSLoginQueue         uint8 = 0x16
-	S2CPing                uint8 = 0x1E
-	S2CMapDescription      uint8 = 0x64
-	S2CMapSliceNorth       uint8 = 0x65
-	S2CMapSliceEast        uint8 = 0x66
-	S2CMapSliceSouth       uint8 = 0x67
-	S2CMapSliceWest        uint8 = 0x68
-	S2CAddTileThing        uint8 = 0x6A
-	S2CUpdateTileItem      uint8 = 0x6B
-	S2CRemoveTileThing     uint8 = 0x6C
-	S2CMoveCreature        uint8 = 0x6D
-	S2COpenContainer       uint8 = 0x6E
-	S2CCloseContainer      uint8 = 0x6F
-	S2CAddContainerItem    uint8 = 0x70
-	S2CUpdateContainerItem uint8 = 0x71
-	S2CRemoveContainerItem uint8 = 0x72
-	S2CAddInventoryItem    uint8 = 0x78
-	S2CRemoveInventoryItem uint8 = 0x79
-	S2CWorldLight          uint8 = 0x82
-	S2CMagicEffect         uint8 = 0x83
-	S2CCreatureHealth      uint8 = 0x8C
-	S2CCreatureLight       uint8 = 0x8D
-	S2CPlayerStats         uint8 = 0xA0
-	S2CPlayerSkills        uint8 = 0xA1
-	S2CPlayerIcons         uint8 = 0xA2
-	S2CSay                 uint8 = 0xAA
+	S2CLoginSuccessful     S2COpcode = 0x0A
+	S2CLoginAsAdmin        S2COpcode = 0x0B
+	S2CServerClosed        S2COpcode = 0x14
+	S2CSLoginQueue         S2COpcode = 0x16
+	S2CPing                S2COpcode = 0x1E
+	S2CMapDescription      S2COpcode = 0x64
+	S2CMapSliceNorth       S2COpcode = 0x65
+	S2CMapSliceEast        S2COpcode = 0x66
+	S2CMapSliceSouth       S2COpcode = 0x67
+	S2CMapSliceWest        S2COpcode = 0x68
+	S2CAddTileThing        S2COpcode = 0x6A
+	S2CUpdateTileItem      S2COpcode = 0x6B
+	S2CRemoveTileThing     S2COpcode = 0x6C
+	S2CMoveCreature        S2COpcode = 0x6D
+	S2COpenContainer       S2COpcode = 0x6E
+	S2CCloseContainer      S2COpcode = 0x6F
+	S2CAddContainerItem    S2COpcode = 0x70
+	S2CUpdateContainerItem S2COpcode = 0x71
+	S2CRemoveContainerItem S2COpcode = 0x72
+	S2CAddInventoryItem    S2COpcode = 0x78
+	S2CRemoveInventoryItem S2COpcode = 0x79
+	S2CWorldLight          S2COpcode = 0x82
+	S2CMagicEffect         S2COpcode = 0x83
+	S2CCreatureHealth      S2COpcode = 0x8C
+	S2CCreatureLight       S2COpcode = 0x8D
+	S2CPlayerStats         S2COpcode = 0xA0
+	S2CPlayerSkills        S2COpcode = 0xA1
+	S2CPlayerIcons         S2COpcode = 0xA2
+	S2CSay                 S2COpcode = 0xAA
 )
 
 const (
-	C2SLookRequest uint8 = 0x8C
+	C2SLookRequest C2SOpcode = 0x8C
 )

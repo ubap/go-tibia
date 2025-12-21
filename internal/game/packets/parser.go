@@ -4,6 +4,7 @@ import (
 	"errors"
 	"goTibia/internal/game/domain"
 	"goTibia/internal/protocol"
+	"io"
 )
 
 var ErrUnknownOpcode = errors.New("unknown opcode")
@@ -23,7 +24,23 @@ type InjectablePacket interface {
 	protocol.Encodable
 }
 
-func ParseS2CPacket(opcode uint8, pr *protocol.PacketReader, ctx ParsingContext) (S2CPacket, error) {
+func ReadAndParseS2C(reader *protocol.PacketReader, ctx ParsingContext) (S2CPacket, error) {
+	if reader.Remaining() == 0 {
+		return nil, io.EOF
+	}
+	opcode := S2COpcode(reader.ReadByte())
+	return ParseS2CPacket(opcode, reader, ctx)
+}
+
+func ReadAndParseC2S(reader *protocol.PacketReader) (C2SPacket, error) {
+	if reader.Remaining() == 0 {
+		return nil, io.EOF
+	}
+	opcode := C2SOpcode(reader.ReadByte())
+	return ParseC2SPacket(opcode, reader)
+}
+
+func ParseS2CPacket(opcode S2COpcode, pr *protocol.PacketReader, ctx ParsingContext) (S2CPacket, error) {
 	switch opcode {
 	case S2CLoginSuccessful:
 		return ParseLoginResultMessage(pr)
@@ -85,7 +102,7 @@ func ParseS2CPacket(opcode uint8, pr *protocol.PacketReader, ctx ParsingContext)
 	}
 }
 
-func ParseC2SPacket(opcode uint8, pr *protocol.PacketReader) (C2SPacket, error) {
+func ParseC2SPacket(opcode C2SOpcode, pr *protocol.PacketReader) (C2SPacket, error) {
 	switch opcode {
 	case C2SLookRequest:
 		return ParseLookRequest(pr)
