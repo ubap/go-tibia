@@ -406,3 +406,15 @@ func ParsePlayerStatsMsg(pr *protocol.PacketReader) (*PlayerStatsMsg, error) {
 
 	return psm, nil
 }
+
+type LoginQueueMsg struct {
+	Message          string
+	RetryTimeSeconds uint8
+}
+
+func ParseLoginQueueMsg(pr *protocol.PacketReader) (*LoginQueueMsg, error) {
+	lqm := &LoginQueueMsg{}
+	lqm.Message = pr.ReadString()
+	lqm.RetryTimeSeconds = pr.ReadByte()
+	return lqm, pr.Err()
+}

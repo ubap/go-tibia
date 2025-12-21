@@ -180,6 +180,8 @@ func (g *GameSession) processPacketFromServer(packet packets.S2CPacket) {
 		log.Printf("[Game] PlayerSkillsMsg %v", p)
 	case *packets.PlayerStatsMsg:
 		log.Printf("[Game] PlayerStatsMsg %v", p)
+	case *packets.LoginQueueMsg:
+		log.Printf("[Game] LoginQueueMsg %v", p)
 
 	default:
 		log.Printf("[Game] Unhandled game packet type: %T", p)

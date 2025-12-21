@@ -27,6 +27,8 @@ func ParseS2CPacket(opcode uint8, pr *protocol.PacketReader, ctx ParsingContext)
 	switch opcode {
 	case S2CLoginSuccessful:
 		return ParseLoginResultMessage(pr)
+	case S2CSLoginQueue:
+		return ParseLoginQueueMsg(pr)
 	case S2CMapDescription:
 		return ParseMapDescriptionMsg(pr)
 	case S2CMapSliceNorth:
