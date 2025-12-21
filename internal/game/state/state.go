@@ -25,8 +25,9 @@ func (gs *GameState) CaptureFrame() WorldSnapshot {
 	defer gs.mu.RUnlock()
 
 	snap := WorldSnapshot{
-		Player:    gs.player,
-		Equipment: gs.equipment,
+		Player:     gs.player,
+		Equipment:  gs.equipment,
+		Containers: gs.containers,
 	}
 
 	return snap
