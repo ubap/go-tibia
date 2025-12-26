@@ -1,0 +1,4 @@
+golangci-lint run
+
+
+go vet ./...
