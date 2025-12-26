@@ -87,12 +87,6 @@ func parseMapDescription(pr *protocol.PacketReader, pos domain.Position, width i
 
 	// 3. Loop until all floors are read
 	for {
-		// Calculate perspective offset for this floor
-		// Tibia shifts the view when looking at lower floors
-		offsetZ := int(pos.Z) - currentZ
-
-		// fmt.Printf("Floor Z=%d, Processed=%d/%d\n", currentZ, tilesProcessed, tilesPerFloor)
-
 		// Peek the Token
 		// >= 0xFF00 means SKIP
 		// <  0xFF00 means TILE (and this is the Ground ID)
@@ -109,6 +103,10 @@ func parseMapDescription(pr *protocol.PacketReader, pos domain.Position, width i
 		} else {
 			// --- REAL TILE ---
 			// 'val' is the Ground ID
+
+			// Calculate perspective offset for this floor
+			// Tibia shifts the view when looking at lower floors
+			offsetZ := int(pos.Z) - currentZ
 
 			// Calculate actual X,Y based on linear index
 			// Tibia loop order: for(x) { for(y) }

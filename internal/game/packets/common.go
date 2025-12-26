@@ -6,7 +6,6 @@ import (
 	"goTibia/internal/protocol"
 )
 
-//nolint:unused
 func writePosition(pw *protocol.PacketWriter, position domain.Position) {
 	pw.WriteUint16(position.X)
 	pw.WriteUint16(position.Y)

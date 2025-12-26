@@ -39,5 +39,6 @@ const (
 )
 
 const (
-	C2SLookRequest C2SOpcode = 0x8C
+	C2SUseItemWithCrosshair C2SOpcode = 0x83
+	C2SLookRequest          C2SOpcode = 0x8C
 )

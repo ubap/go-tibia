@@ -97,3 +97,39 @@ func ParseLookRequest(pr *protocol.PacketReader) (*LookRequest, error) {
 
 	return lr, nil
 }
+
+type UseItemWithCrosshairRequest struct {
+	FromPos      domain.Position
+	FromItemId   uint16
+	FromStackPos uint8
+
+	ToPos      domain.Position
+	ToItemId   uint16
+	ToStackPos uint8
+}
+
+func ParseUseItemWithCrosshairRequest(pr *protocol.PacketReader) (*UseItemWithCrosshairRequest, error) {
+	ur := &UseItemWithCrosshairRequest{}
+
+	ur.FromPos = readPosition(pr)
+	ur.FromItemId = pr.ReadUint16()
+	ur.FromStackPos = pr.ReadUint8()
+
+	ur.ToPos = readPosition(pr)
+	ur.ToItemId = pr.ReadUint16()
+	ur.ToStackPos = pr.ReadUint8()
+
+	return ur, nil
+}
+
+func (ur *UseItemWithCrosshairRequest) Encode(pw *protocol.PacketWriter) {
+	pw.WriteUint8(byte(C2SUseItemWithCrosshair))
+
+	writePosition(pw, ur.FromPos)
+	pw.WriteUint16(ur.FromItemId)
+	pw.WriteUint8(ur.FromStackPos)
+
+	writePosition(pw, ur.ToPos)
+	pw.WriteUint16(ur.ToItemId)
+	pw.WriteUint8(ur.ToStackPos)
+}

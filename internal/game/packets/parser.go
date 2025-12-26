@@ -106,6 +106,8 @@ func ParseC2SPacket(opcode C2SOpcode, pr *protocol.PacketReader) (C2SPacket, err
 	switch opcode {
 	case C2SLookRequest:
 		return ParseLookRequest(pr)
+	case C2SUseItemWithCrosshair:
+		return ParseUseItemWithCrosshairRequest(pr)
 	default:
 		return nil, ErrUnknownOpcode
 	}

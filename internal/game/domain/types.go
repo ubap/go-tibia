@@ -7,6 +7,24 @@ type Position struct {
 	Z    uint8
 }
 
+func (p Position) IsInInventory() bool {
+	// If Y < 64, it's an equipment slot.
+	return p.X == 0xFFFF && p.Y < 64
+}
+
+func (p Position) GetInventorySlot() uint8 {
+	return uint8(p.Y)
+}
+
+func (p Position) IsInContainer() bool {
+	// If it's a container, Y is 64 + containerIndex.
+	return p.X == 0xFFFF && p.Y >= 64
+}
+
+func NewInventoryPosition(slot EquipmentSlot) Position {
+	return Position{X: 0xFFFF, Y: uint16(slot), Z: 0}
+}
+
 type Container struct {
 	// 1. Identification
 	ID     uint8  // The window index (0-15). Crucial for logic.

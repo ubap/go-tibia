@@ -15,6 +15,7 @@ type Bot struct {
 	UserActions chan []byte // packets sent by client to server
 
 	clientConn protocol.Connection
+	serverConn protocol.Connection
 	stopChan   chan struct{}  // The broadcast channel
 	wg         sync.WaitGroup // To wait for modules to finish
 	stopOnce   sync.Once      // To ensure we close the channel only once
@@ -27,6 +28,7 @@ func NewBot(state *state.GameState, clientConn protocol.Connection, serverConn p
 		UserActions: make(chan []byte, 1024),
 
 		clientConn: clientConn,
+		serverConn: serverConn,
 		stopChan:   make(chan struct{}),
 	}
 }
