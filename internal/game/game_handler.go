@@ -62,7 +62,7 @@ func (g *GameSession) loopS2C() {
 			return
 		}
 
-		patchedMsg, err := g.Bot.PatchS2CPacket(rawMsg)
+		patchedMsg, err := g.Bot.InterceptS2CPacket(rawMsg)
 		if err != nil {
 			g.ErrChan <- fmt.Errorf("S2C Patch: %w", err)
 			return

@@ -115,8 +115,8 @@ func (b *Bot) handleUserAction(rawMsg []byte) {
 	}
 }
 
-// PatchS2CPacket has to return immediately.
-func (b *Bot) PatchS2CPacket(data []byte) ([]byte, error) {
+// InterceptS2CPacket has to return immediately.
+func (b *Bot) InterceptS2CPacket(data []byte) ([]byte, error) {
 	pr := protocol.NewPacketReader(data)
 	opcode := packets.S2COpcode(pr.ReadUint8())
 	switch opcode {
