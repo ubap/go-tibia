@@ -17,7 +17,7 @@ const (
 
 type MapDescriptionMsg struct {
 	PlayerPos domain.Position
-	Tiles     []domain.Tile
+	Tiles     map[domain.Position]domain.Tile
 }
 
 func ParseMove(pr *protocol.PacketReader, ctx ParsingContext, direction domain.Direction) (*MapDescriptionMsg, error) {
@@ -64,8 +64,8 @@ func ParseMapDescriptionMsg(pr *protocol.PacketReader) (*MapDescriptionMsg, erro
 	return msg, err
 }
 
-func parseMapDescription(pr *protocol.PacketReader, pos domain.Position, width int, height int) (*[]domain.Tile, error) {
-	tiles := make([]domain.Tile, 0, width*height)
+func parseMapDescription(pr *protocol.PacketReader, pos domain.Position, width int, height int) (*map[domain.Position]domain.Tile, error) {
+	tiles := make(map[domain.Position]domain.Tile)
 
 	// 2. Determine Z-Range
 	// If on surface (z<=7), draw from 7 down to 0.
@@ -121,8 +121,8 @@ func parseMapDescription(pr *protocol.PacketReader, pos domain.Position, width i
 				Z: uint8(currentZ),
 			}
 
-			tile := parseTile(pr, tilePos)
-			tiles = append(tiles, tile)
+			tile := parseTile(pr)
+			tiles[tilePos] = tile
 		}
 
 		// skip tiles
@@ -140,11 +140,10 @@ func parseMapDescription(pr *protocol.PacketReader, pos domain.Position, width i
 	}
 }
 
-func parseTile(pr *protocol.PacketReader, pos domain.Position) domain.Tile {
+func parseTile(pr *protocol.PacketReader) domain.Tile {
 	// 1. Setup the Tile struct
 	t := domain.Tile{
-		Position: pos,
-		Items:    make([]domain.Item, 0, 4), // Pre-allocate small cap for performance
+		Items: make([]domain.Item, 0, 4), // Pre-allocate small cap for performance
 	}
 
 	groundItem := readItem(pr)
