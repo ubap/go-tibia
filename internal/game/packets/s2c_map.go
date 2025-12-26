@@ -206,15 +206,14 @@ func readCreatureInMap(pr *protocol.PacketReader) error {
 	marker := pr.ReadUint16()
 
 	// 2. Handle ID / Name logic
-	if marker == TileDataCreatureKnown { // 0x62
-		// C++: if (known) msg.add<uint32_t>(creature->getID());
+	switch marker {
+	case TileDataCreatureKnown:
 		_ = pr.ReadUint32() // ID
-
-	} else if marker == TileDataCreatureUnknown { // 0x61
+	case TileDataCreatureUnknown:
 		_ = pr.ReadUint32() // The id to remove from knowns, it is there to free some slot from known creatures list.
 		_ = pr.ReadUint32() // ID
 		_ = pr.ReadString() // Name
-	} else {
+	default:
 		return fmt.Errorf("unknown creature marker: 0x%X", marker)
 	}
 
