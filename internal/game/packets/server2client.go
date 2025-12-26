@@ -119,18 +119,18 @@ func ParseMoveCreature(pr *protocol.PacketReader) (*MoveCreatureMsg, error) {
 		// Read FromPos (X, Y, Z)
 		msg.FromPos.X = pr.ReadUint16()
 		msg.FromPos.Y = pr.ReadUint16()
-		msg.FromPos.Z = pr.ReadByte()
+		msg.FromPos.Z = pr.ReadUint8()
 
 		// Read StackPos
 		// In C++, this is msg.addByte(oldStackPos)
-		msg.FromStackPos = int8(pr.ReadByte())
+		msg.FromStackPos = int8(pr.ReadUint8())
 		msg.KnownSourcePosition = true
 	}
 
 	// 3. Read Destination (Always present)
 	msg.ToPos.X = pr.ReadUint16()
 	msg.ToPos.Y = pr.ReadUint16()
-	msg.ToPos.Z = pr.ReadByte()
+	msg.ToPos.Z = pr.ReadUint8()
 
 	return msg, nil
 }
@@ -138,7 +138,7 @@ func ParseMoveCreature(pr *protocol.PacketReader) (*MoveCreatureMsg, error) {
 func ParseMagicEffect(pr *protocol.PacketReader) (*MagicEffect, error) {
 	me := &MagicEffect{}
 	me.Pos = readPosition(pr)
-	me.Type = pr.ReadByte()
+	me.Type = pr.ReadUint8()
 	return me, nil
 }
 
@@ -163,8 +163,8 @@ func ParseRemoveTileThing(pr *protocol.PacketReader) (S2CPacket, error) {
 	msg := &RemoveTileThingMsg{}
 	msg.Pos.X = pr.ReadUint16()
 	msg.Pos.Y = pr.ReadUint16()
-	msg.Pos.Z = pr.ReadByte()
-	msg.StackPos = pr.ReadByte()
+	msg.Pos.Z = pr.ReadUint8()
+	msg.StackPos = pr.ReadUint8()
 
 	return msg, nil
 }
@@ -172,16 +172,16 @@ func ParseRemoveTileThing(pr *protocol.PacketReader) (S2CPacket, error) {
 func ParseCreatureLight(pr *protocol.PacketReader) (*CreatureLightMsg, error) {
 	cl := &CreatureLightMsg{}
 	cl.CreatureID = pr.ReadUint32()
-	cl.LightLevel = pr.ReadByte()
-	cl.Color = pr.ReadByte()
+	cl.LightLevel = pr.ReadUint8()
+	cl.Color = pr.ReadUint8()
 
 	return cl, nil
 }
 
 func ParseWorldLight(pr *protocol.PacketReader) (*WorldLightMsg, error) {
 	cl := &WorldLightMsg{}
-	cl.LightLevel = pr.ReadByte()
-	cl.Color = pr.ReadByte()
+	cl.LightLevel = pr.ReadUint8()
+	cl.Color = pr.ReadUint8()
 
 	return cl, nil
 }
@@ -189,27 +189,27 @@ func ParseWorldLight(pr *protocol.PacketReader) (*WorldLightMsg, error) {
 func ParseCreatureHealth(pr *protocol.PacketReader) (*CreatureHealthMsg, error) {
 	cl := &CreatureHealthMsg{}
 	cl.CreatureID = pr.ReadUint32()
-	cl.Hppc = pr.ReadByte()
+	cl.Hppc = pr.ReadUint8()
 
 	return cl, nil
 }
 
 func (lr *WorldLightMsg) Encode(pw *protocol.PacketWriter) {
-	pw.WriteByte(byte(S2CWorldLight))
-	pw.WriteByte(lr.LightLevel)
-	pw.WriteByte(lr.Color)
+	pw.WriteUint8(byte(S2CWorldLight))
+	pw.WriteUint8(lr.LightLevel)
+	pw.WriteUint8(lr.Color)
 }
 
 func (cr *CreatureLightMsg) Encode(pw *protocol.PacketWriter) {
-	pw.WriteByte(byte(S2CCreatureLight))
+	pw.WriteUint8(byte(S2CCreatureLight))
 	pw.WriteUint32(cr.CreatureID)
-	pw.WriteByte(cr.LightLevel)
-	pw.WriteByte(cr.Color)
+	pw.WriteUint8(cr.LightLevel)
+	pw.WriteUint8(cr.Color)
 }
 
 func ParsePlayerIcons(pr *protocol.PacketReader) (*PlayerIconsMsg, error) {
 	pi := &PlayerIconsMsg{}
-	pi.Icons = pr.ReadByte()
+	pi.Icons = pr.ReadUint8()
 
 	return pi, nil
 }
@@ -228,7 +228,7 @@ func ParseAddTileThingMsg(pr *protocol.PacketReader) (*AddTileThingMsg, error) {
 	ati := &AddTileThingMsg{}
 	ati.Pos.X = pr.ReadUint16()
 	ati.Pos.Y = pr.ReadUint16()
-	ati.Pos.Z = pr.ReadByte()
+	ati.Pos.Z = pr.ReadUint8()
 
 	itemId, _ := pr.PeekUint16()
 	if itemId == 97 || itemId == 98 {
@@ -242,14 +242,14 @@ func ParseAddTileThingMsg(pr *protocol.PacketReader) (*AddTileThingMsg, error) {
 
 func ParseAddInventoryItemMsg(pr *protocol.PacketReader) (*AddInventoryItemMsg, error) {
 	aii := &AddInventoryItemMsg{}
-	aii.Slot = domain.EquipmentSlot(pr.ReadByte())
+	aii.Slot = domain.EquipmentSlot(pr.ReadUint8())
 	aii.Item = readItem(pr)
 	return aii, nil
 }
 
 func ParseRemoveInventoryItemMsg(pr *protocol.PacketReader) (*RemoveInventoryItemMsg, error) {
 	rii := &RemoveInventoryItemMsg{}
-	rii.Slot = domain.EquipmentSlot(pr.ReadByte())
+	rii.Slot = domain.EquipmentSlot(pr.ReadUint8())
 	return rii, nil
 }
 
@@ -266,13 +266,13 @@ func ParseOpenContainerMsg(pr *protocol.PacketReader) (*OpenContainerMsg, error)
 
 	cm := &OpenContainerMsg{}
 
-	cm.ContainerID = pr.ReadByte()
+	cm.ContainerID = pr.ReadUint8()
 	cm.ContainerItem = readItem(pr)
 	cm.ContainerName = pr.ReadString()
-	cm.Capacity = pr.ReadByte()
+	cm.Capacity = pr.ReadUint8()
 	cm.HasParent = pr.ReadBool()
 
-	itemCount := pr.ReadByte()
+	itemCount := pr.ReadUint8()
 
 	// Pre-allocate the slice to avoid resizing overhead
 	cm.Items = make([]domain.Item, 0, itemCount)
@@ -293,8 +293,8 @@ type RemoveContainerItemMsg struct {
 func ParseRemoveContainerItemMsg(pr *protocol.PacketReader) (*RemoveContainerItemMsg, error) {
 	rcim := &RemoveContainerItemMsg{}
 
-	rcim.ContainerID = pr.ReadByte()
-	rcim.Slot = pr.ReadByte()
+	rcim.ContainerID = pr.ReadUint8()
+	rcim.Slot = pr.ReadUint8()
 
 	return rcim, nil
 }
@@ -306,7 +306,7 @@ type AddContainerItemMsg struct {
 
 func ParseAddContainerItemMsg(pr *protocol.PacketReader) (*AddContainerItemMsg, error) {
 	acim := &AddContainerItemMsg{}
-	acim.ContainerID = pr.ReadByte()
+	acim.ContainerID = pr.ReadUint8()
 	acim.Item = readItem(pr)
 
 	return acim, nil
@@ -321,8 +321,8 @@ type UpdateContainerItemMsg struct {
 func ParseUpdateContainerItemMsg(pr *protocol.PacketReader) (*UpdateContainerItemMsg, error) {
 	ucim := &UpdateContainerItemMsg{}
 
-	ucim.ContainerID = pr.ReadByte()
-	ucim.Slot = pr.ReadByte()
+	ucim.ContainerID = pr.ReadUint8()
+	ucim.Slot = pr.ReadUint8()
 	ucim.Item = readItem(pr)
 
 	return ucim, nil
@@ -335,7 +335,7 @@ type CloseContainerMsg struct {
 func ParseCloseContainerMsg(pr *protocol.PacketReader) (*CloseContainerMsg, error) {
 	ccm := &CloseContainerMsg{}
 
-	ccm.ContainerID = pr.ReadByte()
+	ccm.ContainerID = pr.ReadUint8()
 
 	return ccm, nil
 }
@@ -351,7 +351,7 @@ func ParseUpdateTileItemMsg(pr *protocol.PacketReader) (*UpdateTileItemMsg, erro
 	utim := &UpdateTileItemMsg{}
 
 	utim.Position = readPosition(pr)
-	utim.Stackpos = pr.ReadByte()
+	utim.Stackpos = pr.ReadUint8()
 	utim.Item = readItem(pr)
 
 	// TODO - Item can be creature !!
@@ -368,8 +368,8 @@ func ParsePlayerSkillMsg(pr *protocol.PacketReader) (*PlayerSkillsMsg, error) {
 
 	for i := domain.SkillFirst; i <= domain.SkillLast; i++ {
 		psm.Skills[i] = domain.Skill{
-			Level:   pr.ReadByte(),
-			Percent: pr.ReadByte(),
+			Level:   pr.ReadUint8(),
+			Percent: pr.ReadUint8(),
 		}
 	}
 	return psm, nil
@@ -397,12 +397,12 @@ func ParsePlayerStatsMsg(pr *protocol.PacketReader) (*PlayerStatsMsg, error) {
 	psm.FreeCapacity = pr.ReadUint16()
 	psm.Experience = pr.ReadUint32()
 	psm.Level = pr.ReadUint16()
-	psm.LevelPercent = pr.ReadByte()
+	psm.LevelPercent = pr.ReadUint8()
 	psm.Mana = pr.ReadUint16()
 	psm.MaxMana = pr.ReadUint16()
-	psm.MagicLevel = pr.ReadByte()
-	psm.MagicLevelPercent = pr.ReadByte()
-	psm.Soul = pr.ReadByte()
+	psm.MagicLevel = pr.ReadUint8()
+	psm.MagicLevelPercent = pr.ReadUint8()
+	psm.Soul = pr.ReadUint8()
 
 	return psm, nil
 }
@@ -413,14 +413,14 @@ type LoginQueueMsg struct {
 }
 
 func (lqm *LoginQueueMsg) Encode(pw *protocol.PacketWriter) {
-	pw.WriteByte(byte(S2CSLoginQueue))
+	pw.WriteUint8(byte(S2CSLoginQueue))
 	pw.WriteString(lqm.Message)
-	pw.WriteByte(lqm.RetryTimeSeconds)
+	pw.WriteUint8(lqm.RetryTimeSeconds)
 }
 
 func ParseLoginQueueMsg(pr *protocol.PacketReader) (*LoginQueueMsg, error) {
 	lqm := &LoginQueueMsg{}
 	lqm.Message = pr.ReadString()
-	lqm.RetryTimeSeconds = pr.ReadByte()
+	lqm.RetryTimeSeconds = pr.ReadUint8()
 	return lqm, pr.Err()
 }

@@ -30,7 +30,7 @@ func TestPacketReader_HappyPath(t *testing.T) {
 	// Start Reading
 	pr := protocol.NewPacketReader(buf.Bytes())
 
-	require.Equal(t, byte(10), pr.ReadByte())
+	require.Equal(t, byte(10), pr.ReadUint8())
 	require.Equal(t, true, pr.ReadBool())
 	require.Equal(t, uint16(500), pr.ReadUint16())
 	require.Equal(t, uint32(100000), pr.ReadUint32())
@@ -44,11 +44,11 @@ func TestPacketReader_StickyError(t *testing.T) {
 	pr := protocol.NewPacketReader(data)
 
 	// 1. Read successfully
-	_ = pr.ReadByte()
-	_ = pr.ReadByte()
+	_ = pr.ReadUint8()
+	_ = pr.ReadUint8()
 
 	// 2. Trigger EOF (Try to read byte from empty reader)
-	val := pr.ReadByte()
+	val := pr.ReadUint8()
 	require.Equal(t, byte(0), val)
 	require.Error(t, io.EOF, pr.Err())
 
@@ -92,7 +92,7 @@ func TestPacketReader_SkipAndRemaining(t *testing.T) {
 	require.Equal(t, 5, pr.Remaining())
 	pr.Skip(2)
 	require.Equal(t, 3, pr.Remaining())
-	require.Equal(t, byte(3), pr.ReadByte())
+	require.Equal(t, byte(3), pr.ReadUint8())
 }
 
 func TestPacketReader_ReadAll(t *testing.T) {
@@ -100,7 +100,7 @@ func TestPacketReader_ReadAll(t *testing.T) {
 	pr := protocol.NewPacketReader(data)
 
 	// Read one byte first
-	b := pr.ReadByte()
+	b := pr.ReadUint8()
 	require.Equal(t, b, byte(1))
 
 	// ReadAll should get the rest
@@ -141,7 +141,7 @@ func TestPacketReader_PeekBytes(t *testing.T) {
 	pr := protocol.NewPacketReader(data)
 
 	// 1. Advance reader slightly (Read 1 byte)
-	require.Equal(t, byte(0x01), pr.ReadByte(), "Setup error")
+	require.Equal(t, byte(0x01), pr.ReadUint8(), "Setup error")
 
 	// 2. Peek next 3 bytes (should be 0x02, 0x03, 0x04)
 	peeked, err := pr.PeekBytes(3)
@@ -152,13 +152,13 @@ func TestPacketReader_PeekBytes(t *testing.T) {
 	require.True(t, bytes.Equal(peeked, expected), "PeekBytes content mismatch")
 
 	// 3. Verify Cursor did NOT move
-	require.Equal(t, byte(0x02), pr.ReadByte(), "Cursor moved after PeekBytes")
+	require.Equal(t, byte(0x02), pr.ReadUint8(), "Cursor moved after PeekBytes")
 
 	// 4. Verify modifying the peeked slice doesn't affect reader
 	peeked[0] = 0xFF
 	peeked[1] = 0xFF
 	peeked[2] = 0xFF
-	require.Equal(t, byte(0x03), pr.ReadByte(), "Cursor moved after PeekBytes modification")
+	require.Equal(t, byte(0x03), pr.ReadUint8(), "Cursor moved after PeekBytes modification")
 }
 
 func TestPacketReader_PeekBytes_Errors(t *testing.T) {

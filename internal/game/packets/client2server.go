@@ -20,14 +20,14 @@ type LoginRequest struct {
 }
 
 func (lr *LoginRequest) Encode(pw *protocol.PacketWriter) {
-	pw.WriteByte(lr.Protocol)
+	pw.WriteUint8(lr.Protocol)
 	pw.WriteUint16(lr.ClientOS)
 	pw.WriteUint16(lr.ClientVersion)
 
 	// RSA Encrypted part starts here
 	toEncrypt := protocol.NewPacketWriter()
 
-	toEncrypt.WriteByte(0x00) // Write the check check byte
+	toEncrypt.WriteUint8(0x00) // Write the check check byte
 	toEncrypt.WriteUint32(lr.XTEAKey[0])
 	toEncrypt.WriteUint32(lr.XTEAKey[1])
 	toEncrypt.WriteUint32(lr.XTEAKey[2])
@@ -50,7 +50,7 @@ func (lr *LoginRequest) Encode(pw *protocol.PacketWriter) {
 func ParseLoginRequest(packetReader *protocol.PacketReader) (*LoginRequest, error) {
 	packet := &LoginRequest{}
 
-	packet.Protocol = packetReader.ReadByte()
+	packet.Protocol = packetReader.ReadUint8()
 	packet.ClientOS = packetReader.ReadUint16()
 	packet.ClientVersion = packetReader.ReadUint16()
 
@@ -61,7 +61,7 @@ func ParseLoginRequest(packetReader *protocol.PacketReader) (*LoginRequest, erro
 
 	decryptedBlock := crypto.DecryptRSA(encryptedBlock)
 	decryptedBlockReader := protocol.NewPacketReader(decryptedBlock)
-	checkByte := decryptedBlockReader.ReadByte()
+	checkByte := decryptedBlockReader.ReadUint8()
 	if checkByte != 0x00 {
 		return nil, errors.New("invalid checkByte")
 	}
@@ -93,7 +93,7 @@ func ParseLookRequest(pr *protocol.PacketReader) (*LookRequest, error) {
 
 	lr.Pos = readPosition(pr)
 	lr.ItemId = pr.ReadUint16()
-	lr.StackPos = pr.ReadByte()
+	lr.StackPos = pr.ReadUint8()
 
 	return lr, nil
 }

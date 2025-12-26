@@ -28,7 +28,7 @@ func ReadAndParseS2C(reader *protocol.PacketReader, ctx ParsingContext) (S2CPack
 	if reader.Remaining() == 0 {
 		return nil, io.EOF
 	}
-	opcode := S2COpcode(reader.ReadByte())
+	opcode := S2COpcode(reader.ReadUint8())
 	return ParseS2CPacket(opcode, reader, ctx)
 }
 
@@ -36,7 +36,7 @@ func ReadAndParseC2S(reader *protocol.PacketReader) (C2SPacket, error) {
 	if reader.Remaining() == 0 {
 		return nil, io.EOF
 	}
-	opcode := C2SOpcode(reader.ReadByte())
+	opcode := C2SOpcode(reader.ReadUint8())
 	return ParseC2SPacket(opcode, reader)
 }
 

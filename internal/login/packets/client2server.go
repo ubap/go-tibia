@@ -20,7 +20,7 @@ type ClientCredentialPacket struct {
 }
 
 func (lp *ClientCredentialPacket) Encode(pw *protocol.PacketWriter) {
-	pw.WriteByte(lp.Protocol)
+	pw.WriteUint8(lp.Protocol)
 	pw.WriteUint16(lp.ClientOS)
 	pw.WriteUint16(lp.ClientVersion)
 	pw.WriteUint32(lp.DatSignature)
@@ -30,7 +30,7 @@ func (lp *ClientCredentialPacket) Encode(pw *protocol.PacketWriter) {
 	// RSA Encrypted part starts here
 	toEncrypt := protocol.NewPacketWriter()
 
-	toEncrypt.WriteByte(0x00) // Write the check check byte
+	toEncrypt.WriteUint8(0x00) // Write the check check byte
 	toEncrypt.WriteUint32(lp.XTEAKey[0])
 	toEncrypt.WriteUint32(lp.XTEAKey[1])
 	toEncrypt.WriteUint32(lp.XTEAKey[2])
@@ -51,7 +51,7 @@ func (lp *ClientCredentialPacket) Encode(pw *protocol.PacketWriter) {
 func ParseCredentialsPacket(packetReader *protocol.PacketReader) (*ClientCredentialPacket, error) {
 	packet := &ClientCredentialPacket{}
 
-	packet.Protocol = packetReader.ReadByte()
+	packet.Protocol = packetReader.ReadUint8()
 	packet.ClientOS = packetReader.ReadUint16()
 	packet.ClientVersion = packetReader.ReadUint16()
 	packet.DatSignature = packetReader.ReadUint32()
@@ -65,7 +65,7 @@ func ParseCredentialsPacket(packetReader *protocol.PacketReader) (*ClientCredent
 
 	decryptedBlock := crypto.DecryptRSA(encryptedBlock)
 	decryptedBlockReader := protocol.NewPacketReader(decryptedBlock)
-	checkByte := decryptedBlockReader.ReadByte()
+	checkByte := decryptedBlockReader.ReadUint8()
 	if checkByte != 0x00 {
 		return nil, errors.New("invalid checkByte")
 	}

@@ -115,7 +115,7 @@ func (b *Bot) handleUserAction(rawMsg []byte) {
 // PatchS2CPacket has to return immediately.
 func (b *Bot) PatchS2CPacket(data []byte) ([]byte, error) {
 	pr := protocol.NewPacketReader(data)
-	opcode := packets.S2COpcode(pr.ReadByte())
+	opcode := packets.S2COpcode(pr.ReadUint8())
 	switch opcode {
 	case packets.S2CSLoginQueue:
 		pw := protocol.NewPacketWriter()

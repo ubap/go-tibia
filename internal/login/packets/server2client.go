@@ -19,18 +19,18 @@ type LoginResultMessage struct {
 
 func (lp *LoginResultMessage) Encode(pw *protocol.PacketWriter) {
 	if lp.ClientDisconnected {
-		pw.WriteByte(S2COpcodeDisconnectClient)
+		pw.WriteUint8(S2COpcodeDisconnectClient)
 		pw.WriteString(lp.ClientDisconnectedReason)
 	}
 
 	if lp.Motd != nil {
-		pw.WriteByte(S2COpcodeMOTD)
+		pw.WriteUint8(S2COpcodeMOTD)
 		motdData := fmt.Sprintf("%s\n%s", lp.Motd.MotdId, lp.Motd.Message)
 		pw.WriteString(motdData)
 	}
 
 	if lp.CharacterList != nil {
-		pw.WriteByte(S2COpcodeCharacterList)
+		pw.WriteUint8(S2COpcodeCharacterList)
 		writeCharacterList(pw, lp.CharacterList)
 	}
 }
@@ -38,7 +38,7 @@ func (lp *LoginResultMessage) Encode(pw *protocol.PacketWriter) {
 func ParseLoginResultMessage(pr *protocol.PacketReader) (*LoginResultMessage, error) {
 	message := LoginResultMessage{}
 	for pr.Remaining() > 0 {
-		opcode := pr.ReadByte()
+		opcode := pr.ReadUint8()
 		if err := pr.Err(); err != nil {
 			return nil, fmt.Errorf("failed to read opcode: %w", err)
 		}
@@ -94,7 +94,7 @@ type CharacterEntry struct {
 }
 
 func parseCharacterList(packetReader *protocol.PacketReader) (*CharacterList, error) {
-	entryCount := packetReader.ReadByte()
+	entryCount := packetReader.ReadUint8()
 
 	characterEntries := make([]*CharacterEntry, entryCount)
 	for i := 0; i < int(entryCount); i++ {
@@ -124,7 +124,7 @@ func writeCharacterEntry(pw *protocol.PacketWriter, entry *CharacterEntry) {
 }
 
 func writeCharacterList(pw *protocol.PacketWriter, charList *CharacterList) {
-	pw.WriteByte(uint8(len(charList.Characters)))
+	pw.WriteUint8(uint8(len(charList.Characters)))
 	for _, entry := range charList.Characters {
 		writeCharacterEntry(pw, entry)
 	}

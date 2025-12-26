@@ -219,10 +219,10 @@ func readCreatureInMap(pr *protocol.PacketReader) error {
 	}
 
 	// Health
-	_ = pr.ReadByte()
+	_ = pr.ReadUint8()
 
 	// Direction
-	_ = pr.ReadByte()
+	_ = pr.ReadUint8()
 
 	// Outfit
 	if err := readOutfit(pr); err != nil {
@@ -230,15 +230,15 @@ func readCreatureInMap(pr *protocol.PacketReader) error {
 	}
 
 	// Light
-	_ = pr.ReadByte() // Light Level
-	_ = pr.ReadByte() // Light Color
+	_ = pr.ReadUint8() // Light Level
+	_ = pr.ReadUint8() // Light Color
 
 	// Speed
 	_ = pr.ReadUint16()
 
 	// Skull & Party
-	_ = pr.ReadByte() // Skull
-	_ = pr.ReadByte() // Party Shield
+	_ = pr.ReadUint8() // Skull
+	_ = pr.ReadUint8() // Party Shield
 
 	return nil
 }
@@ -247,10 +247,10 @@ func readOutfit(pr *protocol.PacketReader) error {
 	lookType := pr.ReadUint16()
 
 	if lookType != 0 {
-		_ = pr.ReadByte() // Head
-		_ = pr.ReadByte() // Body
-		_ = pr.ReadByte() // Legs
-		_ = pr.ReadByte() // Feet
+		_ = pr.ReadUint8() // Head
+		_ = pr.ReadUint8() // Body
+		_ = pr.ReadUint8() // Legs
+		_ = pr.ReadUint8() // Feet
 	} else {
 		// Item Outfit (Chameleon Rune, etc.)
 		_ = pr.ReadUint16() // Look Item ID

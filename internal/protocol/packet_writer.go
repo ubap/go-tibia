@@ -19,11 +19,11 @@ func (pw *PacketWriter) Err() error {
 	return pw.err
 }
 
-func (pw *PacketWriter) WriteByte(b byte) {
+func (pw *PacketWriter) WriteUint8(b uint8) {
 	if pw.err != nil {
 		return
 	}
-	// Use native WriteByte to avoid allocation
+	// Use native WriteUint8 to avoid allocation
 	pw.err = pw.buff.WriteByte(b)
 }
 

@@ -9,14 +9,14 @@ import (
 func writePosition(pw *protocol.PacketWriter, position domain.Position) {
 	pw.WriteUint16(position.X)
 	pw.WriteUint16(position.Y)
-	pw.WriteByte(position.Z)
+	pw.WriteUint8(position.Z)
 }
 
 func readPosition(pr *protocol.PacketReader) domain.Position {
 	return domain.Position{
 		X: pr.ReadUint16(),
 		Y: pr.ReadUint16(),
-		Z: pr.ReadByte(),
+		Z: pr.ReadUint8(),
 	}
 }
 
@@ -26,7 +26,7 @@ func readItem(pr *protocol.PacketReader) domain.Item {
 	thing := assets.Get(id)
 
 	if thing.IsStackable || thing.IsFluid {
-		item.Count = pr.ReadByte()
+		item.Count = pr.ReadUint8()
 		item.HasCount = true
 	}
 

@@ -24,8 +24,8 @@ func (pr *PacketReader) Err() error {
 	return pr.err
 }
 
-// ReadByte reads a single byte. Returns 0 if an error occurred previously.
-func (pr *PacketReader) ReadByte() uint8 {
+// ReadUint8 reads a single byte. Returns 0 if an error occurred previously.
+func (pr *PacketReader) ReadUint8() uint8 {
 	if pr.err != nil {
 		return 0
 	}
@@ -43,7 +43,7 @@ func (pr *PacketReader) ReadBool() bool {
 		return false
 	}
 
-	return pr.ReadByte() != 0
+	return pr.ReadUint8() != 0
 }
 
 // ReadUint16 reads a uint16 (LittleEndian). Returns 0 on error.
