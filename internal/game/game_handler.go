@@ -170,7 +170,7 @@ func (g *GameSession) processPacketFromServer(packet packets.S2CPacket) {
 	}
 }
 
-func (h *GameSession) handleContainerOpen(p *packets.OpenContainerMsg) {
+func (g *GameSession) handleContainerOpen(p *packets.OpenContainerMsg) {
 	// 1. Translate Packet -> Domain
 	container := domain.Container{
 		ID:       p.ContainerID,
@@ -180,5 +180,5 @@ func (h *GameSession) handleContainerOpen(p *packets.OpenContainerMsg) {
 		Items:    p.Items,
 	}
 
-	h.State.OpenContainer(container)
+	g.State.OpenContainer(container)
 }
