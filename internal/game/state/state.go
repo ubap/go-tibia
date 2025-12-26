@@ -12,6 +12,7 @@ type GameState struct {
 	player     domain.Player
 	equipment  [11]domain.Item
 	containers [16]*domain.Container // nil means closed
+	worldMap   map[domain.Position]domain.Tile
 
 	mu sync.RWMutex
 }
@@ -31,6 +32,7 @@ func (gs *GameState) CaptureFrame() WorldSnapshot {
 		Player:     gs.player,
 		Equipment:  gs.equipment,
 		Containers: gs.containers,
+		WorldMap:   gs.worldMap,
 	}
 
 	return snap
@@ -159,4 +161,13 @@ func (gs *GameState) UpdateContainerItem(cId uint8, slot uint8, item domain.Item
 	}
 
 	container.Items[slot] = item
+}
+
+func (gs *GameState) SetTiles(tiles map[domain.Position]domain.Tile) {
+	gs.mu.Lock()
+	defer gs.mu.Unlock()
+
+	for pos, tile := range tiles {
+		gs.worldMap[pos] = tile
+	}
 }

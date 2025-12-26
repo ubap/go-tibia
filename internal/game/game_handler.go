@@ -122,6 +122,7 @@ func (g *GameSession) processPacketFromServer(packet packets.S2CPacket) {
 	case *packets.PingMsg: // Ignore
 	case *packets.MapDescriptionMsg:
 		g.State.SetPlayerPos(p.PlayerPos)
+		g.State.SetTiles(p.Tiles)
 	case *packets.MoveCreatureMsg:
 		// log.Printf("[Game] MoveCreatureMsg %v", p)
 	case *packets.MagicEffect:
