@@ -20,6 +20,9 @@ func New() *GameState {
 	return &GameState{}
 }
 
+// CaptureFrame creates a snapshot of the current world state.
+// The returned WorldSnapshot is a copy of the data at the time of calling.
+// This allows safe concurrent access without locking the GameState for extended periods.
 func (gs *GameState) CaptureFrame() WorldSnapshot {
 	gs.mu.RLock()
 	defer gs.mu.RUnlock()
