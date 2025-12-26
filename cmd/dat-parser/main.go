@@ -146,7 +146,7 @@ func parseItem(r *bytes.Reader, id uint16) ItemAttributes {
 		case 0x0C: // Blocking
 			item.IsBlocking = true
 		case 0x0D: // Immovable
-			item.IsPickupable = true
+			item.IsPickupable = false
 		case 0x0E: // Block Missiles
 			item.IsMissileBlock = true
 		case 0x0F: // Block Path

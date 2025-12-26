@@ -31,9 +31,9 @@ func Initialize(size int) {
 	Things = make([]ItemType, size)
 }
 
-func Get(id uint16) *ItemType {
+func Get(id uint16) ItemType {
 	if int(id) >= len(Things) {
-		return &ItemType{ID: id}
+		return ItemType{ID: id}
 	}
-	return &Things[id]
+	return Things[id]
 }

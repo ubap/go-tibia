@@ -7,6 +7,7 @@ import (
 	"goTibia/internal/game/domain"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -37,91 +38,92 @@ func (b *Bot) loopWebDebug() {
 }
 
 func (b *Bot) handleRenderMap(w http.ResponseWriter, r *http.Request) {
-	// 1. Capture a consistent snapshot of the game state
-	// We call this once to ensure player pos and map data are synchronized
 	frame := b.state.CaptureFrame()
-
 	pPos := frame.Player.Pos
-	currentZ := pPos.Z
-	worldTiles := frame.WorldMap // map[domain.Position]*domain.Tile
+	worldTiles := frame.WorldMap
 
-	// 2. Configuration
-	const radius = 8 // How many tiles to show in each direction
+	const radius = 10 // Slightly larger view
+	side := (radius * 2) + 1
 
-	// 3. Start HTML Header
 	w.Header().Set("Content-Type", "text/html")
 	fmt.Fprint(w, `<html><head>
-    <title>goTibia Map Debugger</title>
     <meta http-equiv="refresh" content="1">
 	<style>
-		body { background: #121212; color: #eee; font-family: 'Courier New', monospace; display: flex; flex-direction: column; align-items: center; padding-top: 30px; }
-		.stats { margin-bottom: 15px; background: #222; padding: 10px 20px; border-radius: 5px; border: 1px solid #444; }
-        .map-container { 
-            background: #000; 
-            padding: 15px; 
-            border: 3px solid #333; 
-            line-height: 14px; 
-            letter-spacing: 3px; 
-            font-size: 16px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+		body { background: #121212; color: #eee; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; }
+		.stats { margin: 20px; background: #222; padding: 10px; border-radius: 5px; border: 1px solid #444; width: 400px; text-align: center; }
+        
+        /* Grid Layout */
+        .map-grid { 
+            display: grid; 
+            grid-template-columns: repeat(`+fmt.Sprint(side)+`, 30px); 
+            grid-template-rows: repeat(`+fmt.Sprint(side)+`, 30px); 
+            gap: 1px;
+            background: #333;
+            border: 5px solid #333;
         }
-		.tile { display: inline-block; width: 16px; height: 16px; vertical-align: middle; text-align: center; }
-		.player { color: #00ff00; font-weight: bold; text-shadow: 0 0 8px #00ff00; }
-		.item { color: #f1c40f; }
-		.ground { color: #333; }
-		.creature { color: #e74c3c; font-weight: bold; }
-		.unknown { color: #1a1a1a; }
+
+        .tile { 
+            width: 30px; height: 30px; 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 10px; font-weight: bold; cursor: help;
+            position: relative;
+        }
+
+        /* Color Mapping */
+        .player     { background: #00ff00; color: #000; z-index: 10; border-radius: 50%; scale: 0.8; }
+        .unknown    { background: #000; }
+        .walkable   { background: #2e7d32; } /* Green/Grass */
+        .blocking   { background: #b71c1c; } /* Red/Wall */
+        .path-block { background: #ff6f00; } /* Orange/Fire/MagicWall */
+        .water      { background: #01579b; } /* Blue/Water */
+        .item-box   { background: #fbc02d; color: #000; } /* Yellow/Chest/Container */
+        .pickupable { border: 2px inset #fff; } /* White border for loot on ground */
+
+        .legend { margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 12px; }
+        .legend-item { display: flex; align-items: center; gap: 10px; }
+        .box { width: 15px; height: 15px; border: 1px solid #fff; }
 	</style></head><body>`)
 
-	// Display metadata
-	fmt.Fprintf(w, `<div class="stats">
-        <b>Player ID:</b> %d | 
-        <b>Position:</b> (%d, %d, %d)
-    </div>`, frame.Player.ID, pPos.X, pPos.Y, currentZ)
+	fmt.Fprintf(w, `<div class="stats"><b>Position:</b> %d, %d, %d</div>`, pPos.X, pPos.Y, pPos.Z)
 
-	fmt.Fprint(w, "<div class='map-container'>")
+	fmt.Fprint(w, "<div class='map-grid'>")
 
-	// 4. Render the grid centered on the player
 	for y := pPos.Y - radius; y <= pPos.Y+radius; y++ {
 		for x := pPos.X - radius; x <= pPos.X+radius; x++ {
+			currPos := domain.Position{X: x, Y: y, Z: pPos.Z}
 
-			currPos := domain.Position{X: x, Y: y, Z: currentZ}
-
-			// A. Check if this is the player
+			// 1. Handle Player
 			if currPos == pPos {
-				fmt.Fprint(w, "<span class='tile player' title='YOU'>@</span>")
+				fmt.Fprint(w, "<div class='tile walkable player' title='YOU'>@</div>")
 				continue
 			}
 
-			// B. Lookup tile in the Snapshot
+			// 2. Handle Unknown
 			tile, ok := worldTiles[currPos]
 			if !ok {
-				// Not in the proxy's current map cache
-				fmt.Fprint(w, "<span class='tile unknown'>.</span>")
+				fmt.Fprint(w, "<div class='tile unknown'></div>")
 				continue
 			}
 
-			// Determine what to draw
-			groundType := assets.Get(tile.Items[len(tile.Items)-1].ID)
+			// 3. Analyze Tile Stack
+			class, label, tooltip := b.analyzeTile(tile)
 
-			char := " "
-			class := ""
-			title := fmt.Sprintf("%v", groundType)
-
-			if hasAnyBlockingItem(tile) {
-				char = "X"
-			} else {
-				char = "."
-			}
-
-			fmt.Fprintf(w, "<span class='tile %s' title='%s'>%s</span>", class, title, char)
+			fmt.Fprintf(w, "<div class='tile %s' title='%s'>%s</div>", class, tooltip, label)
 		}
-		// End of row
-		fmt.Fprint(w, "<br>")
 	}
 
 	fmt.Fprint(w, "</div>")
-	fmt.Fprint(w, "<p style='color:#666; font-size:12px;'>Centering logic: Player is always middle. '.' is ground, 'i' is item, 'C' is creature.</p>")
+
+	// Legend
+	fmt.Fprint(w, `
+    <div class="legend">
+        <div class="legend-item"><div class="box" style="background:#2e7d32"></div> Walkable</div>
+        <div class="legend-item"><div class="box" style="background:#b71c1c"></div> Solid Wall / Blocking</div>
+        <div class="legend-item"><div class="box" style="background:#ff6f00"></div> Path Block (M-Wall/Field)</div>
+        <div class="legend-item"><div class="box" style="background:#01579b"></div> Water / Non-walkable Ground</div>
+        <div class="legend-item"><div class="box" style="background:#fbc02d"></div> Container / Item Box</div>
+    </div>`)
+
 	fmt.Fprint(w, "</body></html>")
 }
 
@@ -136,4 +138,106 @@ func hasAnyBlockingItem(tile *domain.Tile) bool {
 		}
 	}
 	return false
+}
+
+func (b *Bot) analyzeTile(tile *domain.Tile) (string, string, string) {
+	if len(tile.Items) == 0 {
+		return "unknown", "", "Empty Tile"
+	}
+
+	class := "walkable"
+	label := ""
+	fullTooltip := ""
+
+	// We iterate from TOP to BOTTOM for the tooltip
+	// (so the item you see first is at the top of the text)
+	for i := len(tile.Items) - 1; i >= 0; i-- {
+		item := tile.Items[i]
+		attr := assets.Get(item.ID)
+
+		fullTooltip += fmt.Sprintf("--- LAYER %d ---\n%s\n\n", i, formatItemTooltip(attr))
+
+		// Determine visual class based on item properties
+		// (Priority: Blocking > PathBlock > Water > Ground)
+		if attr.IsGround {
+			if attr.Speed == 0 {
+				class = "water"
+			} else {
+				class = "walkable"
+			}
+		}
+		if attr.IsBlocking && !attr.IsGround {
+			class = "blocking"
+			label = "X"
+		}
+		if attr.IsPathBlock {
+			class = "path-block"
+			label = "P"
+		}
+		if attr.IsContainer {
+			class = "item-box"
+			label = "C"
+		}
+		if attr.IsPickupable {
+			// Add a visual indicator for loot
+			if !strings.Contains(class, "pickupable") {
+				class += " pickupable"
+			}
+		}
+	}
+
+	return class, label, strings.TrimSpace(fullTooltip)
+}
+
+func formatItemTooltip(attr assets.ItemType) string {
+	res := fmt.Sprintf("ID: %d", attr.ID)
+	if attr.Name != "" {
+		res += fmt.Sprintf(" (%s)", attr.Name)
+	}
+	res += "\n--------------------"
+
+	// Logic Flags (Only show if true to keep it clean)
+	if attr.IsGround {
+		res += fmt.Sprintf("\n[Ground] Speed: %d", attr.Speed)
+	}
+	if attr.IsBlocking {
+		res += "\n[X] Blocking (Solid)"
+	}
+	if attr.IsMissileBlock {
+		res += "\n[X] Missile Block"
+	}
+	if attr.IsPathBlock {
+		res += "\n[X] Path Block (M-Wall/Field)"
+	}
+	if attr.IsContainer {
+		res += "\n[!] Container"
+	}
+	if attr.IsStackable {
+		res += "\n[+] Stackable"
+	}
+	if attr.IsFluid {
+		res += "\n[~] Fluid/Splash"
+	}
+	if attr.IsMultiUse {
+		res += "\n[*] Multi-Use (Rune/Tool)"
+	}
+	if attr.IsPickupable {
+		res += "\n[$] Pickupable"
+	}
+	//if attr.IsRotatable {
+	//	res += "\n[R] Rotatable"
+	//}
+
+	// Visuals/Misc
+	//if attr.Elevation > 0 {
+	//	res += fmt.Sprintf("\nElevation: %d", attr.Elevation)
+	//}
+	//if attr.LightLevel > 0 {
+	//	res += fmt.Sprintf("\nLight: Lvl %d / Col %d", attr.LightLevel, attr.LightColor)
+	//}
+	//if attr.MinimapColor > 0 {
+	//	res += fmt.Sprintf("\nMinimap Color: %d", attr.MinimapColor)
+	//}
+
+	return res
 }
