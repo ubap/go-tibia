@@ -81,7 +81,10 @@ func (b *Bot) loopLightHack() {
 				LightLevel: 0xFF,
 				Color:      0xD7,
 			}
-			b.clientConn.SendPacket(pkt)
+			err := b.clientConn.SendPacket(pkt)
+			if err != nil {
+				return
+			}
 		}
 	}
 }
