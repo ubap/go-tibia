@@ -34,9 +34,9 @@ func NewBot(state *state.GameState, clientConn protocol.Connection, serverConn p
 func (b *Bot) Start() {
 	log.Println("[Bot] Engine started")
 
-	// 1. The Light Hack (For testing S2C injection)
 	b.runModule("LightHack", b.loopLightHack)
 	b.runModule("HandleUserAction", b.loopHandleUserAction)
+	b.runModule("Fishing", b.loopFishing)
 }
 
 func (b *Bot) Stop() {

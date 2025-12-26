@@ -18,7 +18,9 @@ type GameState struct {
 }
 
 func New() *GameState {
-	return &GameState{}
+	return &GameState{
+		worldMap: make(map[domain.Position]domain.Tile),
+	}
 }
 
 // CaptureFrame creates a snapshot of the current world state.
