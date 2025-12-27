@@ -25,6 +25,10 @@ func NewInventoryPosition(slot EquipmentSlot) Position {
 	return Position{X: 0xFFFF, Y: uint16(slot), Z: 0}
 }
 
+func NewContainerPosition(containerIndex, slot int) Position {
+	return Position{X: 0xFFFF, Y: uint16(64 + containerIndex), Z: uint8(slot)}
+}
+
 type Container struct {
 	// 1. Identification
 	ID     uint8  // The window index (0-15). Crucial for logic.

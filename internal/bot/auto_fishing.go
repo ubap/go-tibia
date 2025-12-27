@@ -21,13 +21,17 @@ func (b *Bot) loopFishing() {
 
 		case <-ticker.C:
 			frame := b.state.CaptureFrame()
-			pos := frame.Player.Pos
 
-			fishPos := b.findFishPos(frame, pos)
+			fishingRod := b.findFishingRod(frame)
+			if fishingRod == nil {
+				log.Println("[Bot] No fishing rod found in equipment or containers.")
+				continue
+			}
+
+			fishPos, tileWithFish := b.findFishPos(frame)
 			if fishPos == nil {
 				continue
 			}
-			tileWithFish := frame.WorldMap[*fishPos]
 
 			pkt := packets.UseItemWithCrosshairRequest{
 				FromPos:      domain.NewInventoryPosition(domain.SlotAmmo),
@@ -39,23 +43,45 @@ func (b *Bot) loopFishing() {
 				ToStackPos: 0,
 			}
 
-			// map is off, invesgiate why
 			b.serverConn.SendPacket(&pkt)
 		}
 	}
 }
 
-func (b *Bot) findFishPos(frame state.WorldSnapshot, pos domain.Position) *domain.Position {
+func (b *Bot) findFishPos(frame state.WorldSnapshot) (*domain.Position, *domain.Tile) {
+	pos := frame.Player.Pos
 	for x := pos.X - 7; x <= pos.X+7; x++ {
 		for y := pos.Y - 5; y <= pos.Y+5; y++ {
 			currentPos := domain.Position{X: x, Y: y, Z: pos.Z}
 			tile, ok := frame.WorldMap[currentPos]
 			if ok && tile.Items[0].ID == 4598 {
 				log.Printf("[Bot] Found water with tile at (%d, %d, %d)", x, y, pos.Z)
-				return &currentPos
+				return &currentPos, tile
 			}
 		}
 
+	}
+	return nil, nil
+}
+
+func (b *Bot) findFishingRod(frame state.WorldSnapshot) *domain.Position {
+	for slot, item := range frame.Equipment {
+		if item.ID == 3483 {
+			pos := domain.NewInventoryPosition(domain.EquipmentSlot(slot))
+			return &pos
+		}
+	}
+
+	for cid, container := range frame.Containers {
+		if container == nil {
+			continue
+		}
+		for slot, item := range container.Items {
+			if item.ID == 3483 {
+				pos := domain.NewContainerPosition(cid, slot)
+				return &pos
+			}
+		}
 	}
 	return nil
 }

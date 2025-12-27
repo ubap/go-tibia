@@ -38,7 +38,7 @@ func (b *Bot) Start() {
 
 	b.runModule("LightHack", b.loopLightHack)
 	b.runModule("HandleUserAction", b.loopHandleUserAction)
-	b.runModule("Fishing", b.loopFishing)
+	//b.runModule("Fishing", b.loopFishing)
 	b.runModule("WebDebug", b.loopWebDebug)
 }
 
