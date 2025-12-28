@@ -2,7 +2,10 @@ import { writable } from 'svelte/store';
 
 export const botStore = writable({
     fishingEnabled: false,
-    name: "",
+    name: "Connecting...",
+    x: 0,
+    y: 0,
+    z: 0
 });
 
 export function connect() {

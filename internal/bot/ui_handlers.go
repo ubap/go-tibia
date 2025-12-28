@@ -15,6 +15,9 @@ var upgrader = websocket.Upgrader{
 type BotSnapshot struct {
 	FishingEnabled bool   `json:"fishingEnabled"`
 	Name           string `json:"name"`
+	X              uint16 `json:"x"`
+	Y              uint16 `json:"y"`
+	Z              uint8  `json:"z"`
 }
 
 func (b *Bot) HandleWS(w http.ResponseWriter, r *http.Request) {
@@ -30,6 +33,9 @@ func (b *Bot) HandleWS(w http.ResponseWriter, r *http.Request) {
 		snap := BotSnapshot{
 			FishingEnabled: b.fishingEnabled,
 			Name:           b.state.CaptureFrame().Player.Name,
+			X:              b.state.CaptureFrame().Player.Pos.X,
+			Y:              b.state.CaptureFrame().Player.Pos.Y,
+			Z:              b.state.CaptureFrame().Player.Pos.Z,
 		}
 
 		payload, _ := json.Marshal(snap)
