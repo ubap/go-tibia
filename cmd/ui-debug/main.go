@@ -11,6 +11,7 @@ func main() {
 	wg.Add(1)
 
 	gs := state.New()
+	gs.SetPlayerName("JohnDoe")
 
 	b := bot.NewBot(gs, nil, nil)
 	b.StartUIOnly()
