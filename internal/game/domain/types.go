@@ -63,6 +63,13 @@ type Tile struct {
 	Items    []Item
 }
 
+func (t Tile) TopItem() Item {
+	if len(t.Items) == 0 {
+		return Item{}
+	}
+	return t.Items[len(t.Items)-1]
+}
+
 type Direction uint8
 
 const (

@@ -2,7 +2,6 @@ package bot
 
 import (
 	"goTibia/internal/game/domain"
-	"goTibia/internal/game/packets"
 	"goTibia/internal/game/state"
 	"log"
 	"time"
@@ -35,17 +34,7 @@ func (b *Bot) loopFishing() {
 				continue
 			}
 
-			pkt := packets.UseItemWithCrosshairRequest{
-				FromPos:      domain.NewInventoryPosition(domain.SlotAmmo),
-				FromItemId:   3483,
-				FromStackPos: 0,
-
-				ToPos:      tileWithFish.Position,
-				ToItemId:   tileWithFish.Items[0].ID,
-				ToStackPos: 0,
-			}
-
-			b.serverConn.SendPacket(&pkt)
+			b.UseItemFromInventoryOnTile(*fishingRod, *tileWithFish)
 		}
 	}
 }

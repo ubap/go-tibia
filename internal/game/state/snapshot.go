@@ -9,7 +9,12 @@ type WorldSnapshot struct {
 	WorldMap   map[domain.Position]*domain.Tile
 }
 
-func (s WorldSnapshot) FindItemInEqAndOpenWindows(itemId uint16) *domain.Position {
+type ItemInInventory struct {
+	Item     domain.Item
+	Position domain.Position
+}
+
+func (s WorldSnapshot) FindItemInEqAndOpenWindows(itemId uint16) *ItemInInventory {
 	itemInEq := s.findItemInEq(itemId)
 	if itemInEq != nil {
 		return itemInEq
@@ -18,17 +23,21 @@ func (s WorldSnapshot) FindItemInEqAndOpenWindows(itemId uint16) *domain.Positio
 	return s.findItemInContainers(itemId)
 }
 
-func (s WorldSnapshot) findItemInEq(itemId uint16) *domain.Position {
+func (s WorldSnapshot) findItemInEq(itemId uint16) *ItemInInventory {
 	for slot, item := range s.Equipment {
 		if item.ID == itemId {
-			pos := domain.NewInventoryPosition(domain.EquipmentSlot(slot))
-			return &pos
+			equipmentSlot := domain.EquipmentSlot(slot)
+			pos := domain.NewInventoryPosition(equipmentSlot)
+			return &ItemInInventory{
+				Item:     item,
+				Position: pos,
+			}
 		}
 	}
 	return nil
 }
 
-func (s WorldSnapshot) findItemInContainers(itemId uint16) *domain.Position {
+func (s WorldSnapshot) findItemInContainers(itemId uint16) *ItemInInventory {
 	for cid, container := range s.Containers {
 		if container == nil {
 			// the container is not open
@@ -37,7 +46,10 @@ func (s WorldSnapshot) findItemInContainers(itemId uint16) *domain.Position {
 		for slot, item := range container.Items {
 			if item.ID == itemId {
 				pos := domain.NewContainerPosition(cid, slot)
-				return &pos
+				return &ItemInInventory{
+					Item:     item,
+					Position: pos,
+				}
 			}
 		}
 	}
