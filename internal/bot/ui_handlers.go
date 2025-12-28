@@ -27,6 +27,27 @@ func (b *Bot) HandleWS(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.Close()
 
+	// --- 1. THE COMMAND READER (Browser -> Go) ---
+	go func() {
+		for {
+			_, message, err := conn.ReadMessage()
+			if err != nil {
+				return // Connection closed
+			}
+
+			// Parse the command
+			var cmd struct {
+				Type string `json:"type"`
+			}
+			if err := json.Unmarshal(message, &cmd); err == nil {
+				if cmd.Type == "TOGGLE_FISHING" {
+					b.fishingEnabled = !b.fishingEnabled
+				}
+			}
+		}
+	}()
+
+	// --- 2. THE STATE WRITER (Go -> Browser) ---
 	// Stream updates every 100ms
 	for {
 		// Create a snapshot from your current bot fields

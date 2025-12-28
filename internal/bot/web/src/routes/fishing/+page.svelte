@@ -1,10 +1,5 @@
 <script>
-    import { botStore } from '$lib/botStore';
-
-    function toggle() {
-        // Logic to send message to Go backend
-        console.log("Toggle fishing clicked");
-    }
+    import { botStore, sendToggleFishing } from '$lib/botStore';
 </script>
 
 <header class="mb-8">
@@ -20,7 +15,7 @@
 
         <!-- Toggle Switch -->
         <button
-                on:click={toggle}
+                onclick={sendToggleFishing}
                 class="relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none
       {$botStore.fishingEnabled ? 'bg-orange-600' : 'bg-slate-700'}"
         >

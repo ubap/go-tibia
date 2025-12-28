@@ -8,8 +8,10 @@ export const botStore = writable({
     z: 0
 });
 
+let socket;
+
 export function connect() {
-    const socket = new WebSocket('ws://localhost:8080/ws');
+    socket = new WebSocket('ws://localhost:8080/ws');
 
     socket.onmessage = (event) => {
         const data = JSON.parse(event.data);
@@ -19,4 +21,12 @@ export function connect() {
     socket.onclose = () => {
         setTimeout(connect, 1000); // Auto-reconnect if Go restarts
     };
+}
+
+export function sendToggleFishing() {
+    console.log("Toggling fishing state. Current Socket State:", socket?.readyState);
+    if (socket && socket.readyState === WebSocket.OPEN) {
+        const command = { type: "TOGGLE_FISHING" };
+        socket.send(JSON.stringify(command));
+    }
 }
