@@ -41,7 +41,12 @@ func (b *Bot) Start() {
 	b.runModule("LightHack", b.loopLightHack)
 	b.runModule("HandleUserAction", b.loopHandleUserAction)
 	b.runModule("Fishing", b.loopFishing)
-	//b.runModule("WebDebug", b.loopWebDebug)
+	b.runModule("UI", b.loopWebUI)
+}
+
+func (b *Bot) StartUIOnly() {
+	log.Println("[Bot] Engine started in UI-only mode")
+
 	b.runModule("UI", b.loopWebUI)
 }
 
