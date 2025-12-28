@@ -8,6 +8,8 @@ import (
 	"time"
 )
 
+const fishingRodItemId = 3483
+
 func (b *Bot) loopFishing() {
 	ticker := time.NewTicker(1000 * time.Millisecond)
 	defer ticker.Stop()
@@ -22,7 +24,7 @@ func (b *Bot) loopFishing() {
 		case <-ticker.C:
 			frame := b.state.CaptureFrame()
 
-			fishingRod := b.findFishingRod(frame)
+			fishingRod := frame.FindItemInEqAndOpenWindows(fishingRodItemId)
 			if fishingRod == nil {
 				log.Println("[Bot] No fishing rod found in equipment or containers.")
 				continue
@@ -62,26 +64,4 @@ func (b *Bot) findFishPos(frame state.WorldSnapshot) (*domain.Position, *domain.
 
 	}
 	return nil, nil
-}
-
-func (b *Bot) findFishingRod(frame state.WorldSnapshot) *domain.Position {
-	for slot, item := range frame.Equipment {
-		if item.ID == 3483 {
-			pos := domain.NewInventoryPosition(domain.EquipmentSlot(slot))
-			return &pos
-		}
-	}
-
-	for cid, container := range frame.Containers {
-		if container == nil {
-			continue
-		}
-		for slot, item := range container.Items {
-			if item.ID == 3483 {
-				pos := domain.NewContainerPosition(cid, slot)
-				return &pos
-			}
-		}
-	}
-	return nil
 }
