@@ -1,16 +1,21 @@
 package bot
 
 import (
-	"fmt"
-	"log"
 	"net/http"
 )
 
 func (b *Bot) handleDashboard(w http.ResponseWriter, r *http.Request) {
-	templates.ExecuteTemplate(w, "index.html", nil)
+	b.renderTemplate(w, "index.gohtml", nil)
 }
 
 func (b *Bot) handleFishingView(w http.ResponseWriter, r *http.Request) {
+	// 1. If it's a direct browser access (F5), give them the whole dashboard
+	if r.Header.Get("HX-Request") != "true" {
+		b.handleDashboard(w, r)
+		return
+	}
+
+	// 2. If it's an HTMX click, return ONLY the fishing fragment
 	data := struct {
 		FishingData interface{}
 	}{
@@ -22,7 +27,9 @@ func (b *Bot) handleFishingView(w http.ResponseWriter, r *http.Request) {
 			Enabled:  b.fishingEnabled,
 		},
 	}
-	templates.ExecuteTemplate(w, "fishing-view", data)
+
+	// IMPORTANT: Render the "fishing-view" block, NOT "index.gohtml"
+	b.renderTemplate(w, "fishing-view", data)
 }
 
 func (b *Bot) handleToggleFishing(w http.ResponseWriter, r *http.Request) {
@@ -32,34 +39,31 @@ func (b *Bot) handleToggleFishing(w http.ResponseWriter, r *http.Request) {
 	// 2. Prepare the FULL data the generic toggle needs
 	// If you miss 'Endpoint', the next click won't work!
 	data := struct {
-		Name     string
 		Endpoint string
 		Enabled  bool
 	}{
-		Name:     "Auto Fishing",
 		Endpoint: "/api/toggle-fishing",
 		Enabled:  b.fishingEnabled,
 	}
 
 	// 3. Use the correct template name "toggle"
-	err := templates.ExecuteTemplate(w, "toggle", data)
-	if err != nil {
-		// This log is crucial. If the template fails,
-		// you will see why in your terminal.
-		log.Printf("[UI Error] Failed to render toggle: %v", err)
-	}
+	b.renderTemplate(w, "toggle", data)
 }
 
-func (b *Bot) handleGetStats(w http.ResponseWriter, r *http.Request) {
-	frame := b.state.CaptureFrame()
+func (b *Bot) handleStatsView(w http.ResponseWriter, r *http.Request) {
+	b.renderTemplate(w, "stats-view", nil)
 
-	data := struct {
-		Name string
-		Pos  string
-	}{
-		Name: frame.Player.Name,
-		Pos:  fmt.Sprintf("%d, %d, %d", frame.Player.Pos.X, frame.Player.Pos.Y, frame.Player.Pos.Z),
-	}
+	b.renderNavItem(w, "fishing", "🎣", "Fishing", false)
 
-	templates.ExecuteTemplate(w, "stats", data)
+	b.renderNavItem(w, "stats", "🛡️", "Stats", true)
+}
+
+func (b *Bot) renderNavItem(w http.ResponseWriter, id, icon, label string, active bool) {
+	templates.ExecuteTemplate(w, "nav-item", map[string]interface{}{
+		"ID":     id,
+		"Icon":   icon,
+		"Label":  label,
+		"Active": active,
+		"IsOOB":  true, // Tells HTMX to find the element by ID and swap it
+	})
 }
