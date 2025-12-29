@@ -34,6 +34,8 @@ func (b *Bot) HandleWS(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
+	// This ensures that when this function exits, the socket is closed.
+	// Closing the socket will also force the "Command Reader" goroutine to exit.
 	defer conn.Close()
 
 	// --- 1. THE COMMAND READER (Browser -> Go) ---
@@ -57,28 +59,36 @@ func (b *Bot) HandleWS(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	// --- 2. THE STATE WRITER (Go -> Browser) ---
-	// Stream updates every 100ms
+	ticker := time.NewTicker(100 * time.Millisecond)
+	defer ticker.Stop()
+
 	for {
-		// Create a snapshot from your current bot fields
-		snap := BotSnapshot{
-			FishingEnabled: b.fishingEnabled,
-			Name:           b.state.CaptureFrame().Player.Name,
-			X:              b.state.CaptureFrame().Player.Pos.X,
-			Y:              b.state.CaptureFrame().Player.Pos.Y,
-			Z:              b.state.CaptureFrame().Player.Pos.Z,
-			Waypoints: []Waypoint{
-				{ID: "wp-1", Type: "Walk", X: 32345, Y: 32222, Z: 7},
-				{ID: "wp-2", Type: "Walk", X: 32350, Y: 32230, Z: 7},
-				{ID: "wp-3", Type: "Rope", X: 32350, Y: 32230, Z: 7},
-				{ID: "wp-4", Type: "Walk", X: 32352, Y: 32235, Z: 6},
-			},
-		}
+		select {
+		// EXIT if the Bot is stopped via Stop()
+		case <-b.stopChan:
+			return
 
-		payload, _ := json.Marshal(snap)
-		if err := conn.WriteMessage(websocket.TextMessage, payload); err != nil {
-			break
-		}
+		// EXECUTE update every tick
+		case <-ticker.C:
+			snap := BotSnapshot{
+				FishingEnabled: b.fishingEnabled,
+				Name:           b.state.CaptureFrame().Player.Name,
+				X:              b.state.CaptureFrame().Player.Pos.X,
+				Y:              b.state.CaptureFrame().Player.Pos.Y,
+				Z:              b.state.CaptureFrame().Player.Pos.Z,
+				Waypoints: []Waypoint{
+					{ID: "wp-1", Type: "Walk", X: 32345, Y: 32222, Z: 7},
+					{ID: "wp-2", Type: "Walk", X: 32350, Y: 32230, Z: 7},
+					{ID: "wp-3", Type: "Rope", X: 32350, Y: 32230, Z: 7},
+					{ID: "wp-4", Type: "Walk", X: 32352, Y: 32235, Z: 6},
+				},
+			}
 
-		time.Sleep(100 * time.Millisecond)
+			// We use WriteJSON directly to simplify the code
+			if err := conn.WriteJSON(snap); err != nil {
+				// If the browser tab is closed, this will error out and exit the loop
+				return
+			}
+		}
 	}
 }
