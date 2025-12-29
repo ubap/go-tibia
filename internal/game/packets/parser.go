@@ -1,13 +1,11 @@
 package packets
 
 import (
-	"errors"
+	"fmt"
 	"io"
 	"z07/internal/game/domain"
 	"z07/internal/protocol"
 )
-
-var ErrUnknownOpcode = errors.New("unknown opcode")
 
 type C2SPacket interface {
 }
@@ -98,7 +96,7 @@ func ParseS2CPacket(opcode S2COpcode, pr *protocol.PacketReader, ctx ParsingCont
 		return ParsePlayerStatsMsg(pr)
 
 	default:
-		return nil, ErrUnknownOpcode
+		return nil, fmt.Errorf("unknown opcode 0x%02X", opcode)
 	}
 }
 
@@ -109,6 +107,6 @@ func ParseC2SPacket(opcode C2SOpcode, pr *protocol.PacketReader) (C2SPacket, err
 	case C2SUseItemWithCrosshair:
 		return ParseUseItemWithCrosshairRequest(pr)
 	default:
-		return nil, ErrUnknownOpcode
+		return nil, fmt.Errorf("unknown opcode 0x%02X", opcode)
 	}
 }
