@@ -89,12 +89,14 @@ func (b *Bot) loopLightHack() {
 				continue
 			}
 
-			pkt := &packets.WorldLightMsg{
+			pkt := &packets.CreatureLightMsg{
+				CreatureID: pId,
 				LightLevel: 0xFF,
 				Color:      0xD7,
 			}
 			err := b.clientConn.SendPacket(pkt)
 			if err != nil {
+				log.Printf("[Bot][LightHack] Failed to send light packet: %v", err)
 				return
 			}
 		}

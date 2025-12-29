@@ -194,14 +194,8 @@ func ParseCreatureHealth(pr *protocol.PacketReader) (*CreatureHealthMsg, error) 
 	return cl, nil
 }
 
-func (lr *WorldLightMsg) Encode(pw *protocol.PacketWriter) {
-	pw.WriteUint8(byte(S2CWorldLight))
-	pw.WriteUint8(lr.LightLevel)
-	pw.WriteUint8(lr.Color)
-}
-
 func (cr *CreatureLightMsg) Encode(pw *protocol.PacketWriter) {
-	pw.WriteUint8(byte(S2CCreatureLight))
+	pw.WriteUint8(uint8(S2CCreatureLight))
 	pw.WriteUint32(cr.CreatureID)
 	pw.WriteUint8(cr.LightLevel)
 	pw.WriteUint8(cr.Color)
