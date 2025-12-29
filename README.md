@@ -1,4 +1,22 @@
-# A Man-in-the-Middle (MITM) proxy for the Tibia MMO, built to explore network programming and protocol reverse engineering in Go.
+# z07
+
+### The Legend of the Two Sevens
+
+In the world of the wanderer, **Floor 7** is the surface. It is the beginning of every journey—the sunlit ground where the grass grows and the legends walk. It is the anchor of reality.
+
+But in the world of the architect, there is another summit. At the very peak of the digital stack sits **Layer 7**—the **Zenith**. This is the Application Layer, the high-altitude realm where logic breathes and where the game’s heart truly beats.
+
+**z07** is the phantom that lives at the intersection of these two worlds.
+
+Forged in the speed of **Go** and hidden in the shadows of the Man-in-the-Middle, **z07** acts as a silent observer at the edge of the grid. It is more than a proxy; it is a vantage point. It sits at the **Zenith of the Seventh Floor**, translating the cold, raw binary of the wire into the vivid pulse of the game state.
+
+While the client and server speak their private language, **z07** listens, learns, and pilots the flow. It is the invisible bridge between the pixel and the packet.
+
+**Welcome to the middle. Welcome to z07.**
+
+---
+
+
 
 ### 📦 Setup Guide
 
