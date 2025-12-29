@@ -89,7 +89,7 @@ func (g *GameSession) loopC2S() {
 			g.ErrChan <- fmt.Errorf("C2S Patch: %w", err)
 			return
 		}
-		if err := g.ClientConn.WriteMessage(patchedMsg); err != nil {
+		if err := g.ServerConn.WriteMessage(patchedMsg); err != nil {
 			g.ErrChan <- fmt.Errorf("C2S Write: %w", err)
 			return
 		}
