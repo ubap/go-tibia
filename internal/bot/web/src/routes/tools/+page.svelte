@@ -55,4 +55,110 @@
         </button>
     </div>
 
+    <!-- Light Intensity -->
+    <div class="p-6 space-y-4">
+        <div class="flex justify-between items-center">
+            <span class="text-sm font-medium text-slate-300">Light Intensity</span>
+
+            <!-- Editable Number Input -->
+            <input
+                    type="number"
+                    min="0"
+                    max="16"
+                    value={bot.lighthackLevel}
+                    oninput={(e) => bot.setLighthackLevel(e.target.value)}
+                    disabled={!bot.lighthackEnabled}
+                    class="w-12 text-center font-mono text-orange-500 bg-slate-950 px-1 py-0.5 rounded border border-slate-800 text-xs
+                   focus:ring-1 focus:ring-orange-500 focus:outline-none focus:border-orange-500/50
+                   disabled:opacity-30 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            />
+        </div>
+
+        <input
+                type="range"
+                min="0"
+                max="16"
+                value={bot.lighthackLevel}
+                oninput={(e) => {
+        let val = parseInt(e.target.value);
+
+        if (val > 16) {
+            val = 16;
+        } else if (val < 0) {
+            val = 0;
+        }
+        e.target.value = val;
+
+        bot.lighthackLevel(val);
+    }}
+                disabled={!bot.lighthackEnabled}
+                class="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-orange-500 disabled:opacity-30 disabled:cursor-not-allowed"
+        />
+
+        <div class="flex justify-between text-[10px] font-mono text-slate-600 uppercase">
+            <span>Min</span>
+            <span>Max</span>
+        </div>
+    </div>
+
+    <!-- Light Color -->
+    <div class="p-6 space-y-4">
+        <div class="flex justify-between items-center">
+            <span class="text-sm font-medium text-slate-300">Light Color</span>
+
+            <!-- Editable Number Input -->
+            <input
+                    type="number"
+                    min="0"
+                    max="255"
+                    value={bot.lighthackColor}
+                    oninput={(e) => {
+        let val = parseInt(e.target.value);
+
+        if (val > 255) {
+            val = 255;
+        } else if (val < 0) {
+            val = 0;
+        }
+        e.target.value = val;
+
+        bot.setLighthackColor(val);
+    }}
+                    disabled={!bot.lighthackEnabled}
+                    class="w-12 text-center font-mono text-orange-500 bg-slate-950 px-1 py-0.5 rounded border border-slate-800 text-xs
+                   focus:ring-1 focus:ring-orange-500 focus:outline-none focus:border-orange-500/50
+                   disabled:opacity-30 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            />
+        </div>
+
+        <input
+                type="range"
+                min="0"
+                max="255"
+                value={bot.lighthackColor}
+                oninput={(e) => bot.setLighthackColor(e.target.value)}
+                disabled={!bot.lighthackEnabled}
+                class="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-orange-500 disabled:opacity-30 disabled:cursor-not-allowed"
+        />
+
+        <div class="flex justify-between text-[10px] font-mono text-slate-600 uppercase">
+            <span>Min</span>
+            <span>Max</span>
+        </div>
+    </div>
 </div>
+
+<style>
+    /* Optional: Custom styling to make the slider thumb look more like a pro tool */
+    input[type='range']::-webkit-slider-thumb {
+        appearance: none;
+        height: 18px;
+        width: 18px;
+        border-radius: 50%;
+        background: #f97316; /* orange-500 */
+        cursor: pointer;
+        border: 2px solid #0f172a; /* slate-900 */
+        box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    }
+</style>
+

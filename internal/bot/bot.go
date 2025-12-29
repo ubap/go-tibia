@@ -21,7 +21,10 @@ type Bot struct {
 	// Module states
 	fishingEnabled   bool
 	lighthackEnabled bool
-	lastLookedAt     uint16
+	lighthackLevel   uint8
+	lighthackColor   uint8
+
+	lastLookedAt uint16
 }
 
 func NewBot(state *state.GameState, clientConn protocol.Connection, serverConn protocol.Connection) *Bot {
@@ -31,6 +34,9 @@ func NewBot(state *state.GameState, clientConn protocol.Connection, serverConn p
 		clientConn: clientConn,
 		serverConn: serverConn,
 		stopChan:   make(chan struct{}),
+
+		lighthackLevel: 0xFF,
+		lighthackColor: 0xD7,
 	}
 }
 
@@ -91,8 +97,8 @@ func (b *Bot) loopLightHack() {
 
 			pkt := &packets.CreatureLightMsg{
 				CreatureID: pId,
-				LightLevel: 0xFF,
-				Color:      0xD7,
+				LightLevel: b.lighthackLevel,
+				Color:      b.lighthackColor,
 			}
 			err := b.clientConn.SendPacket(pkt)
 			if err != nil {

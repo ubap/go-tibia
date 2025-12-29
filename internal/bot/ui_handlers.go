@@ -15,6 +15,8 @@ var upgrader = websocket.Upgrader{
 type BotSnapshot struct {
 	FishingEnabled   bool       `json:"fishingEnabled"`
 	LighthackEnabled bool       `json:"lighthackEnabled"`
+	LighthackLevel   uint8      `json:"lighthackLevel"`
+	LighthackColor   uint8      `json:"lighthackColor"`
 	Name             string     `json:"name"`
 	X                uint16     `json:"x"`
 	Y                uint16     `json:"y"`
@@ -49,13 +51,23 @@ func (b *Bot) HandleWS(w http.ResponseWriter, r *http.Request) {
 
 			// Parse the command
 			var cmd struct {
-				Type string `json:"type"`
+				Type string          `json:"type"`
+				Data json.RawMessage `json:"data"`
 			}
 			if err := json.Unmarshal(message, &cmd); err == nil {
 				if cmd.Type == "TOGGLE_FISHING" {
 					b.fishingEnabled = !b.fishingEnabled
-				} else if cmd.Type == "TOGGLE_LIGHTHACK" {
-					b.lighthackEnabled = !b.lighthackEnabled
+				} else if cmd.Type == "SET_LIGHTHACK" {
+					var data struct {
+						Enabled bool  `json:"enabled"`
+						Level   uint8 `json:"level"`
+						Color   uint8 `json:"color"`
+					}
+					if err := json.Unmarshal(cmd.Data, &data); err == nil {
+						b.lighthackEnabled = data.Enabled
+						b.lighthackLevel = data.Level
+						b.lighthackColor = data.Color
+					}
 				}
 			}
 		}
@@ -76,6 +88,8 @@ func (b *Bot) HandleWS(w http.ResponseWriter, r *http.Request) {
 			snap := BotSnapshot{
 				FishingEnabled:   b.fishingEnabled,
 				LighthackEnabled: b.lighthackEnabled,
+				LighthackLevel:   b.lighthackLevel,
+				LighthackColor:   b.lighthackColor,
 				Name:             b.state.CaptureFrame().Player.Name,
 				X:                b.state.CaptureFrame().Player.Pos.X,
 				Y:                b.state.CaptureFrame().Player.Pos.Y,
