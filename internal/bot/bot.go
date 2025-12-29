@@ -1,12 +1,12 @@
 package bot
 
 import (
-	"goTibia/internal/game/packets"
-	"goTibia/internal/game/state"
-	"goTibia/internal/protocol"
 	"log"
 	"sync"
 	"time"
+	"z07/internal/game/packets"
+	"z07/internal/game/state"
+	"z07/internal/protocol"
 )
 
 type Bot struct {

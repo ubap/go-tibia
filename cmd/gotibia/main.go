@@ -20,12 +20,12 @@
 package main
 
 import (
-	"goTibia/internal/assets"
-	"goTibia/internal/game"
-	"goTibia/internal/login"
-	"goTibia/internal/proxy"
 	"log"
 	"sync"
+	"z07/internal/assets"
+	"z07/internal/game"
+	"z07/internal/login"
+	"z07/internal/proxy"
 )
 
 func main() {

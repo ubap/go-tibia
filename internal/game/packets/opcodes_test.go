@@ -1,9 +1,9 @@
 package packets
 
 import (
-	"goTibia/internal/tools/sortcon"
 	"os"
 	"testing"
+	"z07/internal/tools/sortcon"
 
 	"github.com/stretchr/testify/assert"
 )

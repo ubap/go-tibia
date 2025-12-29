@@ -2,9 +2,9 @@ package packets
 
 import (
 	"errors"
-	"goTibia/internal/game/domain"
-	"goTibia/internal/protocol"
 	"io"
+	"z07/internal/game/domain"
+	"z07/internal/protocol"
 )
 
 var ErrUnknownOpcode = errors.New("unknown opcode")

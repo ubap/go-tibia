@@ -1,8 +1,8 @@
 package protocol_test
 
 import (
-	"goTibia/internal/protocol"
 	"testing"
+	"z07/internal/protocol"
 
 	"github.com/stretchr/testify/require"
 )

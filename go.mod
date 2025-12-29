@@ -1,4 +1,4 @@
-module goTibia
+module z07
 
 go 1.25
 

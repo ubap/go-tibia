@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"goTibia/internal/tools/sortcon"
 	"os"
+	"z07/internal/tools/sortcon"
 )
 
 func main() {

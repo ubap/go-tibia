@@ -2,10 +2,10 @@ package proxy
 
 import (
 	"fmt"
-	"goTibia/internal/protocol"
 	"log"
 	"net"
 	"time"
+	"z07/internal/protocol"
 )
 
 type ConnectionHandler interface {

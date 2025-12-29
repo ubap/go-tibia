@@ -2,8 +2,8 @@ package state
 
 import (
 	"fmt"
-	"goTibia/internal/game/domain"
 	"sync"
+	"z07/internal/game/domain"
 )
 
 // GameState is the container for all tracking data.

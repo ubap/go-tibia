@@ -2,12 +2,12 @@ package game
 
 import (
 	"fmt"
-	"goTibia/internal/game/domain"
-	"goTibia/internal/game/packets"
-	"goTibia/internal/game/state"
-	"goTibia/internal/protocol"
-	"goTibia/internal/proxy"
 	"log"
+	"z07/internal/game/domain"
+	"z07/internal/game/packets"
+	"z07/internal/game/state"
+	"z07/internal/protocol"
+	"z07/internal/proxy"
 )
 
 type GameHandler struct {

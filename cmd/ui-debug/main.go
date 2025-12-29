@@ -1,10 +1,10 @@
 package main
 
 import (
-	"goTibia/internal/bot"
-	"goTibia/internal/game/domain"
-	"goTibia/internal/game/state"
 	"sync"
+	"z07/internal/bot"
+	"z07/internal/game/domain"
+	"z07/internal/game/state"
 )
 
 func main() {

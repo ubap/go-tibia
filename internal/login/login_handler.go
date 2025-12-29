@@ -1,12 +1,12 @@
 package login
 
 import (
-	"goTibia/internal/login/packets"
-	"goTibia/internal/protocol"
-	"goTibia/internal/proxy"
 	"log"
 	"strconv"
 	"time"
+	"z07/internal/login/packets"
+	"z07/internal/protocol"
+	"z07/internal/proxy"
 )
 
 type LoginHandler struct {

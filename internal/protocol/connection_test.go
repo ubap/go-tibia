@@ -3,8 +3,8 @@ package protocol_test
 import (
 	"bytes"
 	"encoding/binary"
-	"goTibia/internal/protocol"
 	"testing"
+	"z07/internal/protocol"
 
 	"github.com/stretchr/testify/require"
 )

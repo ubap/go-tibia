@@ -3,9 +3,9 @@ package packets
 import (
 	"errors"
 	"fmt"
-	"goTibia/internal/protocol"
 	"log"
 	"strings"
+	"z07/internal/protocol"
 )
 
 // region LoginResultMessage

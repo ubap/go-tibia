@@ -1,9 +1,9 @@
 package packets
 
 import (
-	"goTibia/internal/assets"
-	"goTibia/internal/game/domain"
-	"goTibia/internal/protocol"
+	"z07/internal/assets"
+	"z07/internal/game/domain"
+	"z07/internal/protocol"
 )
 
 func writePosition(pw *protocol.PacketWriter, position domain.Position) {

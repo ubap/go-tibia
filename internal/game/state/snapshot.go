@@ -1,6 +1,6 @@
 package state
 
-import "goTibia/internal/game/domain"
+import "z07/internal/game/domain"
 
 type WorldSnapshot struct {
 	Player     domain.Player

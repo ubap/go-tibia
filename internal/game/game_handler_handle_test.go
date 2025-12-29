@@ -2,12 +2,12 @@ package game
 
 import (
 	"errors"
-	"goTibia/internal/game/packets"
-	"goTibia/internal/game/state"
-	"goTibia/internal/protocol"
 	"net"
 	"testing"
 	"time"
+	"z07/internal/game/packets"
+	"z07/internal/game/state"
+	"z07/internal/protocol"
 
 	"github.com/stretchr/testify/require"
 )

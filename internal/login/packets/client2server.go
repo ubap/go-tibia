@@ -2,8 +2,8 @@ package packets
 
 import (
 	"errors"
-	"goTibia/internal/protocol"
-	"goTibia/internal/protocol/crypto"
+	"z07/internal/protocol"
+	"z07/internal/protocol/crypto"
 )
 
 // ClientCredentialPacket is a special packet. It's the first packet sent by the client to the server

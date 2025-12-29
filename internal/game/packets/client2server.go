@@ -2,9 +2,9 @@ package packets
 
 import (
 	"errors"
-	"goTibia/internal/game/domain"
-	"goTibia/internal/protocol"
-	"goTibia/internal/protocol/crypto"
+	"z07/internal/game/domain"
+	"z07/internal/protocol"
+	"z07/internal/protocol/crypto"
 )
 
 type LoginRequest struct {

@@ -1,9 +1,9 @@
 package game
 
 import (
-	"goTibia/internal/bot"
-	"goTibia/internal/game/state"
-	"goTibia/internal/protocol"
+	"z07/internal/bot"
+	"z07/internal/game/state"
+	"z07/internal/protocol"
 )
 
 type GameSession struct {

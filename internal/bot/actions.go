@@ -1,9 +1,9 @@
 package bot
 
 import (
-	"goTibia/internal/game/domain"
-	"goTibia/internal/game/packets"
-	"goTibia/internal/game/state"
+	"z07/internal/game/domain"
+	"z07/internal/game/packets"
+	"z07/internal/game/state"
 )
 
 func (b *Bot) UseItemFromInventoryOnTile(item state.ItemInInventory, to domain.Tile) {

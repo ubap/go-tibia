@@ -3,9 +3,9 @@ package protocol
 import (
 	"encoding/binary"
 	"fmt"
-	"goTibia/internal/protocol/crypto"
 	"io"
 	"net"
+	"z07/internal/protocol/crypto"
 )
 
 type Connection interface {

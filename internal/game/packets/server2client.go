@@ -1,8 +1,8 @@
 package packets
 
 import (
-	"goTibia/internal/game/domain"
-	"goTibia/internal/protocol"
+	"z07/internal/game/domain"
+	"z07/internal/protocol"
 )
 
 type LoginResponse struct {

@@ -2,8 +2,8 @@ package proxy
 
 import (
 	"fmt"
-	"goTibia/internal/protocol"
 	"log"
+	"z07/internal/protocol"
 )
 
 type XTEAPacket interface {

@@ -1,9 +1,9 @@
 package packets_test
 
 import (
-	"goTibia/internal/game/packets"
-	"goTibia/internal/protocol"
 	"testing"
+	"z07/internal/game/packets"
+	"z07/internal/protocol"
 
 	"github.com/stretchr/testify/require"
 )

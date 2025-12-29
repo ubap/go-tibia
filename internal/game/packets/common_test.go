@@ -1,9 +1,9 @@
 package packets
 
 import (
-	"goTibia/internal/game/domain"
-	"goTibia/internal/protocol"
 	"testing"
+	"z07/internal/game/domain"
+	"z07/internal/protocol"
 
 	"github.com/stretchr/testify/require"
 )

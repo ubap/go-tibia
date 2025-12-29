@@ -1,10 +1,10 @@
 package packets_test
 
 import (
-	"goTibia/internal/login/packets"
-	"goTibia/internal/protocol"
-	"goTibia/internal/protocol/crypto"
 	"testing"
+	"z07/internal/login/packets"
+	"z07/internal/protocol"
+	"z07/internal/protocol/crypto"
 
 	"github.com/stretchr/testify/require"
 )
