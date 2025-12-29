@@ -2,14 +2,15 @@
 	import './layout.css';
 	import "../app.css";
 	import { onMount } from 'svelte';
-	import { connect } from '$lib/botStore';
+	import { connect } from '$lib/socket.js';
 	import { page } from '$app/stores';
 
 	onMount(() => connect());
 
 	const navItems = [
 		{ name: 'Character Stats', href: '/stats', icon: '📊' },
-		{ name: 'Fishing Bot', href: '/fishing', icon: '🎣' }
+		{ name: 'Fishing Bot', href: '/fishing', icon: '🎣' },
+		{ name: 'Waypoints', href: '/waypoints', icon: '' }
 	];
 </script>
 

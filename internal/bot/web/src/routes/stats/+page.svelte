@@ -1,5 +1,5 @@
 <script>
-  import { botStore } from '$lib/botStore';
+  import { bot } from '$lib/botStore.svelte';
 </script>
 
 <div class="space-y-6">
@@ -15,7 +15,7 @@
     <div class="bg-slate-900 border border-slate-800 p-5 rounded-xl shadow-sm">
       <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">Character Name</span>
       <div class="mt-1 text-xl font-semibold text-orange-500">
-        {$botStore.name}
+        {bot.name}
       </div>
     </div>
 
@@ -27,19 +27,19 @@
         <!-- X Coordinate -->
         <div class="flex flex-col">
           <span class="text-[10px] text-slate-500 font-mono">X</span>
-          <span class="text-lg font-mono text-slate-200 bg-slate-800 px-2 py-1 rounded">{$botStore.x}</span>
+          <span class="text-lg font-mono text-slate-200 bg-slate-800 px-2 py-1 rounded">{bot.x}</span>
         </div>
 
         <!-- Y Coordinate -->
         <div class="flex flex-col">
           <span class="text-[10px] text-slate-500 font-mono">Y</span>
-          <span class="text-lg font-mono text-slate-200 bg-slate-800 px-2 py-1 rounded">{$botStore.y}</span>
+          <span class="text-lg font-mono text-slate-200 bg-slate-800 px-2 py-1 rounded">{bot.y}</span>
         </div>
 
         <!-- Z Coordinate (Floor) -->
         <div class="flex flex-col">
           <span class="text-[10px] text-slate-500 font-mono">Z</span>
-          <span class="text-lg font-mono text-orange-400 bg-slate-800 px-2 py-1 rounded">{$botStore.z}</span>
+          <span class="text-lg font-mono text-orange-400 bg-slate-800 px-2 py-1 rounded">{bot.z}</span>
         </div>
       </div>
     </div>

@@ -13,11 +13,20 @@ var upgrader = websocket.Upgrader{
 }
 
 type BotSnapshot struct {
-	FishingEnabled bool   `json:"fishingEnabled"`
-	Name           string `json:"name"`
-	X              uint16 `json:"x"`
-	Y              uint16 `json:"y"`
-	Z              uint8  `json:"z"`
+	FishingEnabled bool       `json:"fishingEnabled"`
+	Name           string     `json:"name"`
+	X              uint16     `json:"x"`
+	Y              uint16     `json:"y"`
+	Z              uint8      `json:"z"`
+	Waypoints      []Waypoint `json:"waypoints"`
+}
+
+type Waypoint struct {
+	ID   string `json:"id"` // Required for DND reordering
+	Type string `json:"type"`
+	X    int    `json:"x"`
+	Y    int    `json:"y"`
+	Z    int    `json:"z"`
 }
 
 func (b *Bot) HandleWS(w http.ResponseWriter, r *http.Request) {
@@ -57,6 +66,12 @@ func (b *Bot) HandleWS(w http.ResponseWriter, r *http.Request) {
 			X:              b.state.CaptureFrame().Player.Pos.X,
 			Y:              b.state.CaptureFrame().Player.Pos.Y,
 			Z:              b.state.CaptureFrame().Player.Pos.Z,
+			Waypoints: []Waypoint{
+				{ID: "wp-1", Type: "Walk", X: 32345, Y: 32222, Z: 7},
+				{ID: "wp-2", Type: "Walk", X: 32350, Y: 32230, Z: 7},
+				{ID: "wp-3", Type: "Rope", X: 32350, Y: 32230, Z: 7},
+				{ID: "wp-4", Type: "Walk", X: 32352, Y: 32235, Z: 6},
+			},
 		}
 
 		payload, _ := json.Marshal(snap)

@@ -1,5 +1,5 @@
 <script>
-    import { botStore, sendToggleFishing } from '$lib/botStore';
+    import { bot } from '$lib/botStore.svelte.js';
 </script>
 
 <header class="mb-8">
@@ -15,13 +15,13 @@
 
         <!-- Toggle Switch -->
         <button
-                onclick={sendToggleFishing}
+                onclick={bot.toggleFishing}
                 class="relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none
-      {$botStore.fishingEnabled ? 'bg-orange-600' : 'bg-slate-700'}"
+      {bot.fishingEnabled ? 'bg-orange-600' : 'bg-slate-700'}"
         >
       <span
               class="inline-block h-5 w-5 transform rounded-full bg-white transition-transform
-        {$botStore.fishingEnabled ? 'translate-x-6' : 'translate-x-1'}"
+        {bot.fishingEnabled ? 'translate-x-6' : 'translate-x-1'}"
       />
         </button>
     </div>
