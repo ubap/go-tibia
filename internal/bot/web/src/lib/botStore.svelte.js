@@ -10,6 +10,7 @@ class BotStore {
     y = $state(0);
     z = $state(0);
     fishingEnabled = $state(false);
+    lighthackEnabled = $state(false);
 
     // Waypoint list
     waypoints = $state([]);
@@ -25,6 +26,7 @@ class BotStore {
         this.y = data.y;
         this.z = data.z;
         this.fishingEnabled = data.fishingEnabled;
+        this.lighthackEnabled = data.lighthackEnabled;
 
         // This is needed to prevent breaking the drag-and-drop UI
         if (!this.isDraggingWaypoint) {
@@ -34,6 +36,10 @@ class BotStore {
 
     toggleFishing() {
         socket.send(JSON.stringify({ type: "TOGGLE_FISHING" }));
+    }
+
+    toggleLighthack() {
+        socket.send(JSON.stringify({ type: "TOGGLE_LIGHTHACK" }));
     }
 
     reorderWaypoints(newList) {

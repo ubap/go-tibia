@@ -13,12 +13,13 @@ var upgrader = websocket.Upgrader{
 }
 
 type BotSnapshot struct {
-	FishingEnabled bool       `json:"fishingEnabled"`
-	Name           string     `json:"name"`
-	X              uint16     `json:"x"`
-	Y              uint16     `json:"y"`
-	Z              uint8      `json:"z"`
-	Waypoints      []Waypoint `json:"waypoints"`
+	FishingEnabled   bool       `json:"fishingEnabled"`
+	LighthackEnabled bool       `json:"lighthackEnabled"`
+	Name             string     `json:"name"`
+	X                uint16     `json:"x"`
+	Y                uint16     `json:"y"`
+	Z                uint8      `json:"z"`
+	Waypoints        []Waypoint `json:"waypoints"`
 }
 
 type Waypoint struct {
@@ -53,6 +54,8 @@ func (b *Bot) HandleWS(w http.ResponseWriter, r *http.Request) {
 			if err := json.Unmarshal(message, &cmd); err == nil {
 				if cmd.Type == "TOGGLE_FISHING" {
 					b.fishingEnabled = !b.fishingEnabled
+				} else if cmd.Type == "TOGGLE_LIGHTHACK" {
+					b.lighthackEnabled = !b.lighthackEnabled
 				}
 			}
 		}
@@ -71,11 +74,12 @@ func (b *Bot) HandleWS(w http.ResponseWriter, r *http.Request) {
 		// EXECUTE update every tick
 		case <-ticker.C:
 			snap := BotSnapshot{
-				FishingEnabled: b.fishingEnabled,
-				Name:           b.state.CaptureFrame().Player.Name,
-				X:              b.state.CaptureFrame().Player.Pos.X,
-				Y:              b.state.CaptureFrame().Player.Pos.Y,
-				Z:              b.state.CaptureFrame().Player.Pos.Z,
+				FishingEnabled:   b.fishingEnabled,
+				LighthackEnabled: b.lighthackEnabled,
+				Name:             b.state.CaptureFrame().Player.Name,
+				X:                b.state.CaptureFrame().Player.Pos.X,
+				Y:                b.state.CaptureFrame().Player.Pos.Y,
+				Z:                b.state.CaptureFrame().Player.Pos.Z,
 				Waypoints: []Waypoint{
 					{ID: "wp-1", Type: "Walk", X: 32345, Y: 32222, Z: 7},
 					{ID: "wp-2", Type: "Walk", X: 32350, Y: 32230, Z: 7},

@@ -34,3 +34,25 @@
         </div>
     </div>
 </div>
+
+<div class="bg-slate-900 rounded-xl border border-slate-800 divide-y divide-slate-800">
+    <div class="p-6 flex items-center justify-between">
+        <div>
+            <h3 class="font-bold text-lg text-white">Lighthack</h3>
+            <p class="text-sm text-slate-400">Full light every 100ms.</p>
+        </div>
+
+        <!-- Toggle Switch -->
+        <button
+                onclick={bot.toggleLighthack}
+                class="relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none
+      {bot.lighthackEnabled ? 'bg-orange-600' : 'bg-slate-700'}"
+        >
+      <span
+              class="inline-block h-5 w-5 transform rounded-full bg-white transition-transform
+        {bot.lighthackEnabled ? 'translate-x-6' : 'translate-x-1'}"
+      />
+        </button>
+    </div>
+
+</div>

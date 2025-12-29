@@ -10,8 +10,6 @@ import (
 )
 
 type Bot struct {
-	fishingEnabled bool
-
 	state *state.GameState
 
 	clientConn protocol.Connection
@@ -19,6 +17,10 @@ type Bot struct {
 	stopChan   chan struct{}  // The broadcast channel
 	wg         sync.WaitGroup // To wait for modules to finish
 	stopOnce   sync.Once      // To ensure we close the channel only once
+
+	// Module states
+	fishingEnabled   bool
+	lighthackEnabled bool
 }
 
 func NewBot(state *state.GameState, clientConn protocol.Connection, serverConn protocol.Connection) *Bot {
@@ -77,6 +79,9 @@ func (b *Bot) loopLightHack() {
 			return
 
 		case <-ticker.C:
+			if !b.lighthackEnabled {
+				continue
+			}
 			pId := b.state.CaptureFrame().Player.ID
 
 			if pId == 0 {
