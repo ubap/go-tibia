@@ -28,7 +28,7 @@
 			<p
 				class="text-xs text-slate-500 uppercase tracking-widest mt-1"
 			>
-				Internal v1.0
+				v0.1-{__BUILD_VERSION__}
 			</p>
 		</div>
 		<nav class="flex-1 px-4 space-y-2">
