@@ -14,6 +14,8 @@ class BotStore {
     // Waypoint list
     waypoints = $state([]);
 
+    isDraggingWaypoint = false;
+
     // Methods to update state
     updateFromSnapshot(data) {
         this.name = data.name;
@@ -24,8 +26,8 @@ class BotStore {
         this.z = data.z;
         this.fishingEnabled = data.fishingEnabled;
 
-        // Only update waypoints if they actually changed to avoid DND flickering
-        if (JSON.stringify(this.waypoints) !== JSON.stringify(data.waypoints)) {
+        // This is needed to prevent breaking the drag-and-drop UI
+        if (!this.isDraggingWaypoint) {
             this.waypoints = data.waypoints;
         }
     }

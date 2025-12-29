@@ -9,16 +9,21 @@
     const types = ["Walk", "Node", "Rope", "Ladder", "Shovel", "Machete"];
 
     function handleDndConsider(e) {
+        console.log("Handle DnD:", e.detail);
+        bot.isDraggingWaypoint = true;
         bot.waypoints = e.detail.items;
     }
 
     function handleDndFinalize(e) {
+        console.log("Finalized DnD:", e.detail);
         bot.waypoints = e.detail.items;
+        bot.isDraggingWaypoint = false;
+
         // Send the new order back to Go proxy
-        socket.send(JSON.stringify({
-            type: "REORDER_WAYPOINTS",
-            data: bot.waypoints
-        }));
+        // socket.send(JSON.stringify({
+        //     type: "REORDER_WAYPOINTS",
+        //     data: bot.waypoints
+        // }));
     }
 
     function removeWaypoint(id) {
