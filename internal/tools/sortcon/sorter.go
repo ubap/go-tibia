@@ -32,7 +32,7 @@ func SortSource(src []byte) ([]byte, error) {
 			return getValue(a) < getValue(b)
 		})
 
-		// FIX: Reset positions to avoid the "extra whitespace" bug.
+		// Reset positions to avoid the "extra whitespace".
 		// Setting NamePos to token.NoPos tells go/format to use default spacing.
 		for _, spec := range genDecl.Specs {
 			if s, ok := spec.(*ast.ValueSpec); ok {

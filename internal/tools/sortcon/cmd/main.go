@@ -22,7 +22,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	out, err := sortcon.SortSource(src) // Call the library function
+	out, err := sortcon.SortSource(src)
 	if err != nil {
 		fmt.Printf("Error: %v\n", err)
 		os.Exit(1)
