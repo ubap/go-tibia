@@ -35,7 +35,7 @@ func NewBot(state *state.GameState, clientConn protocol.Connection, serverConn p
 		serverConn: serverConn,
 		stopChan:   make(chan struct{}),
 
-		lighthackLevel: 0xFF,
+		lighthackLevel: 0x0F,
 		lighthackColor: 0xD7,
 	}
 }
