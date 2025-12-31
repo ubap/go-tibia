@@ -23,17 +23,3 @@ type ItemType struct {
 	LightColor    uint8  `json:"light_color,omitempty"`
 	Elevation     uint16 `json:"elevation,omitempty"`
 }
-
-// Global Registry
-var Things []ItemType
-
-func Initialize(size int) {
-	Things = make([]ItemType, size)
-}
-
-func Get(id uint16) ItemType {
-	if int(id) >= len(Things) {
-		return ItemType{ID: id}
-	}
-	return Things[id]
-}
