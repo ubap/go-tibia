@@ -1,1 +1,4 @@
-7.72 Had no checksums in packets.
+Protocol Details
+======================
+### 7.72
+* No checksum in packets
