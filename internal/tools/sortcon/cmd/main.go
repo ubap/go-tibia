@@ -6,6 +6,9 @@ import (
 	"z07/internal/tools/sortcon"
 )
 
+/*
+This tool is used to sort the 'const' declarations in a Go source file.
+*/
 func main() {
 	fileName := os.Getenv("GOFILE")
 	if fileName == "" {
@@ -28,5 +31,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	os.WriteFile(fileName, out, 0644)
+	err = os.WriteFile(fileName, out, 0644)
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+		os.Exit(1)
+	}
 }
